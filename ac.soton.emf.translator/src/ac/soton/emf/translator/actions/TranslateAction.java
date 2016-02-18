@@ -73,7 +73,7 @@ public class TranslateAction extends AbstractHandler {
 				// run with progress
 				ProgressMonitorDialog dialog = new ProgressMonitorDialog(editor.getSite().getShell());
 				try {
-					dialog.run(false, true, new IRunnableWithProgress(){
+					dialog.run(true, true, new IRunnableWithProgress(){
 					     public void run(IProgressMonitor monitor) { 
 					    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);
 					         try {
