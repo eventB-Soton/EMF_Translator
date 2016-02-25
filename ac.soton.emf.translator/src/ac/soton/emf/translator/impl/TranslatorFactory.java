@@ -21,8 +21,8 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EPackage;
 
-import ac.soton.emf.translator.IAdapter;
-import ac.soton.emf.translator.IRule;
+import ac.soton.emf.translator.configuration.IAdapter;
+import ac.soton.emf.translator.configuration.IRule;
 
 
 public class TranslatorFactory {

@@ -28,8 +28,8 @@ import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 import ac.soton.emf.translator.Activator;
-import ac.soton.emf.translator.IRule;
 import ac.soton.emf.translator.TranslationDescriptor;
+import ac.soton.emf.translator.configuration.IRule;
 
 /**
  * A generic Translator which is configured from rule classes which have been declared in an extension point.

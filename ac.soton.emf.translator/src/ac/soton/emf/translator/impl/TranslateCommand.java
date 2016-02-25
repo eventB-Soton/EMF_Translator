@@ -8,7 +8,7 @@
  *  Contributors:
  *  University of Southampton - Initial implementation
  *******************************************************************************/
-package ac.soton.emf.translator.command;
+package ac.soton.emf.translator.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,9 +30,6 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
 
 import ac.soton.emf.translator.Activator;
-import ac.soton.emf.translator.impl.Messages;
-import ac.soton.emf.translator.impl.Translator;
-import ac.soton.emf.translator.impl.TranslatorFactory;
 
 //////////////////////TRANSLATE COMMAND//////////////////////////
 public class TranslateCommand extends AbstractEMFOperation {

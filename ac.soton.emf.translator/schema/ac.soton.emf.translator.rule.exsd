@@ -94,7 +94,7 @@
                   The fully qualified name of a class that implements IAdapter
                </documentation>
                <appinfo>
-                  <meta.attribute kind="java" basedOn=":ac.soton.emf.translator.IAdapter"/>
+                  <meta.attribute kind="java" basedOn=":ac.soton.emf.translator.configuration.IAdapter"/>
                </appinfo>
             </annotation>
          </attribute>
@@ -137,7 +137,7 @@ e.g. Invariant
                   The fully qualified name of a class that implements IRule
                </documentation>
                <appinfo>
-                  <meta.attribute kind="java" basedOn="ac.soton.emf.translator.AbstractRule:ac.soton.emf.translator.IRule"/>
+                  <meta.attribute kind="java" basedOn="ac.soton.emf.translator.configuration.AbstractRule:ac.soton.emf.translator.configuration.IRule"/>
                </appinfo>
             </annotation>
          </attribute>

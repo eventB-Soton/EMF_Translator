@@ -32,8 +32,8 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import ac.soton.emf.translator.Activator;
-import ac.soton.emf.translator.command.TranslateCommand;
 import ac.soton.emf.translator.impl.Messages;
+import ac.soton.emf.translator.impl.TranslateCommand;
 import ac.soton.emf.translator.impl.TranslatorFactory;
 
 /**

@@ -8,11 +8,13 @@
  *  Contributors:
  *  University of Southampton - Initial implementation
  *******************************************************************************/
-package ac.soton.emf.translator;
+package ac.soton.emf.translator.configuration;
 
 import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
+
+import ac.soton.emf.translator.TranslationDescriptor;
 
 /**
  * Clients should implement this interface to define Rules for their translator

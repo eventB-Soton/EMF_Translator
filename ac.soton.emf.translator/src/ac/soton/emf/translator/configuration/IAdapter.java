@@ -8,10 +8,12 @@
  *  Contributors:
  *  University of Southampton - Initial implementation
  *******************************************************************************/
-package ac.soton.emf.translator;
+package ac.soton.emf.translator.configuration;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+
+import ac.soton.emf.translator.TranslationDescriptor;
 
 public interface IAdapter {
 

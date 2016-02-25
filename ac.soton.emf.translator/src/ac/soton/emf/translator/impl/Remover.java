@@ -21,7 +21,7 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
-import ac.soton.emf.translator.IAdapter;
+import ac.soton.emf.translator.configuration.IAdapter;
 import ac.soton.emf.translator.utils.Find;
 
 public class Remover {

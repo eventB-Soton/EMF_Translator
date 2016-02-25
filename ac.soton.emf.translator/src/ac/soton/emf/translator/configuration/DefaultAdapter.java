@@ -8,10 +8,12 @@
  *  Contributors:
  *  University of Southampton - Initial implementation
  *******************************************************************************/
-package ac.soton.emf.translator;
+package ac.soton.emf.translator.configuration;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+
+import ac.soton.emf.translator.TranslationDescriptor;
 
 /**
  * This implementation of IAdapter is a default for translation to an EMF other than Event-B
@@ -35,7 +37,7 @@ public class DefaultAdapter implements IAdapter {
 	/**
 	 * This implementation always returns true (i.e. do not filter)
 	 * 
-	 * @see ac.soton.emf.translator.IAdapter#inputFilter(java.lang.Object)
+	 * @see ac.soton.emf.translator.configuration.IAdapter#inputFilter(java.lang.Object)
 	 */
 	@Override
 	public boolean inputFilter(Object object, Object sourceID) {
