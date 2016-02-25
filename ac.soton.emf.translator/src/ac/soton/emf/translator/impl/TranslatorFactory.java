@@ -21,10 +21,8 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EPackage;
 
-import ac.soton.emf.translator.Activator;
 import ac.soton.emf.translator.IAdapter;
 import ac.soton.emf.translator.IRule;
-import ac.soton.emf.translator.impl.TranslatorConfig;
 
 
 public class TranslatorFactory {
@@ -41,7 +39,7 @@ public class TranslatorFactory {
 	 * The constructor for the shared instance of factory,
 	 * populates the registry of translator configurations from extensions point
 	 */
-	private TranslatorFactory() {
+	private TranslatorFactory() throws CoreException {
 
 		// populate translator configuration data from registered extensions
 		for (final IExtension extension : Platform.getExtensionRegistry().getExtensionPoint(Identifiers.EXTPT_RULE_ID).getExtensions()) {
@@ -85,8 +83,7 @@ public class TranslatorFactory {
 						if (translatorConfig != null) translatorConfigRegistry.put(rootSourceClass,translatorConfig);
 					}
 				} catch (final CoreException e) {
-					Activator.logError(e.getMessage(),e);
-					break;
+					throw e;
 				}
 			}
 		}
@@ -94,7 +91,7 @@ public class TranslatorFactory {
 	
 
 
-	public static TranslatorFactory getFactory(){
+	public static TranslatorFactory getFactory() throws CoreException{
 		if (factory == null){
 			factory = new TranslatorFactory();
 		}

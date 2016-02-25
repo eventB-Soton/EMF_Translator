@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
@@ -74,22 +76,21 @@ public class Translator {
  * translate - this should be called from a command handler action, passing the selected element
  * @param editingDomain 
  * @param sourceElement 
+ * @throws CoreException 
  */
-	public List<Resource> translate (TransactionalEditingDomain editingDomain, final EObject sourceElement){
+	public List<Resource> translate (TransactionalEditingDomain editingDomain, final EObject sourceElement) throws CoreException{
 		
 		List<Resource> modifiedResources = new ArrayList<Resource>();
 		try {
 			
 			//check we have a valid configuration for the translator
 			if (translatorConfig==null) {
-				Activator.logError(Messages.TRANSLATOR_MSG_01(sourceElement));
-				return null;
+				throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_01(sourceElement)));
 			}
 			
 			//check we have the correct translator configuration for the source element
 			if (sourceElement.eClass() != translatorConfig.rootSourceClass){
-				Activator.logError(Messages.TRANSLATOR_MSG_02(sourceElement));
-				return null;
+				throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_02(sourceElement)));
 			}
 			
 			//Obtain an ID from the source element
@@ -102,13 +103,11 @@ public class Translator {
 			for (TranslationDescriptor translationDescriptor : translatedElements){
 				if (translationDescriptor.feature!=null &&
 						!translationDescriptor.feature.getEType().isInstance(translationDescriptor.value)){
-					Activator.logError(Messages.TRANSLATOR_MSG_21(translationDescriptor.value,translationDescriptor.feature));
-					return null;
+					throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_21(translationDescriptor.value,translationDescriptor.feature)));
 				}
 				if (translationDescriptor.parent!=null &&
 					!translationDescriptor.parent.eClass().getEAllStructuralFeatures().contains(translationDescriptor.feature)){
-					Activator.logError(Messages.TRANSLATOR_MSG_22(translationDescriptor.parent, translationDescriptor.feature));
-					return null;
+					throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_22(translationDescriptor.parent, translationDescriptor.feature)));
 				}
 			}
 
@@ -126,8 +125,7 @@ public class Translator {
 			modifiedResources.addAll(createNewComponents(editingDomain, sourceElement));
 			
 		} catch (Exception e) {
-			Activator.logError(e.getMessage(),e);
-			return null;
+			throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07 ,e));
 		} 
 
 		//place the newly translated elements in their correct parent features
@@ -139,8 +137,7 @@ public class Translator {
 					);
 			//removeComponents(editingDomain, sourceElement);
 		} catch (Exception e) {
-			Activator.logError(Messages.TRANSLATOR_MSG_04, e);
-			return null;
+			throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_04, e));
 		}
 		
 		//modifiedResources.add(sourceElement.eContainer().eResource()); // NOT FOR IMPORT
