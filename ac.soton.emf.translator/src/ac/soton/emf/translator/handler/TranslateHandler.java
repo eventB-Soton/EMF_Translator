@@ -8,14 +8,16 @@
  *  Contributors:
  *  University of Southampton - Initial implementation
  *******************************************************************************/
-package ac.soton.emf.translator.actions;
+package ac.soton.emf.translator.handler;
 
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -40,7 +42,7 @@ import ac.soton.emf.translator.impl.TranslatorFactory;
  * @author colin 
  *
  */
-public class TranslateAction extends AbstractHandler {
+public class TranslateHandler extends AbstractHandler {
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
@@ -59,47 +61,52 @@ public class TranslateAction extends AbstractHandler {
 				sourceElement = (EObject)obj;
 			}
 		}
-		if (sourceElement!=null && TranslatorFactory.getFactory().canTranslate(sourceElement.eClass())){
-			// save before transformation
-			final IEditorPart editor = HandlerUtil.getActiveEditor(event);
-			if (!(editor instanceof IEditingDomainProvider)) return null;
-			if (editor.isDirty())
-				editor.doSave(new NullProgressMonitor());
-			
-			TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-			final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement);
-			
-			if (translateCommand.canExecute()) {	
-				// run with progress
-				ProgressMonitorDialog dialog = new ProgressMonitorDialog(editor.getSite().getShell());
-				try {
-					dialog.run(true, true, new IRunnableWithProgress(){
-					     public void run(IProgressMonitor monitor) { 
-					    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);
-					         try {
-					        	if (!translateCommand.execute(monitor, editor).isOK()){
-									MessageDialog
-											.openError(editor.getSite().getShell(),
-													Messages.TRANSLATOR_MSG_09,
-													Messages.TRANSLATOR_MSG_10);
-								}
-					         } catch (ExecutionException e) {
-								Activator.logError(Messages.TRANSLATOR_MSG_06, e);
-					         }
-					         monitor.done();
-					     }
-					 });
-				} catch (InvocationTargetException e) {
-					Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-					return null;
-				} catch (InterruptedException e) {
-					Activator.logError(Messages.TRANSLATOR_MSG_08, e);
-					return null;
-				} 
-
-				// error feedback
-
+		if (sourceElement==null) return null;
+		try {
+			if (TranslatorFactory.getFactory().canTranslate(sourceElement.eClass())){
+				// save before transformation
+				final IEditorPart editor = HandlerUtil.getActiveEditor(event);
+				if (!(editor instanceof IEditingDomainProvider)) return null;
+				if (editor.isDirty())
+					editor.doSave(new NullProgressMonitor());
+				
+				TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+				final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement);
+				
+				if (translateCommand.canExecute()) {	
+					// run with progress
+					ProgressMonitorDialog dialog = new ProgressMonitorDialog(editor.getSite().getShell());
+					try {
+						dialog.run(true, true, new IRunnableWithProgress(){
+						     public void run(IProgressMonitor monitor) { 
+						    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);
+						         try {
+						        	IStatus status = translateCommand.execute(monitor, editor);
+						        	if (!status.isOK()){
+						    			Activator.logError(status.getMessage(), (Exception) status.getException());
+										MessageDialog
+												.openError(editor.getSite().getShell(),
+														Messages.TRANSLATOR_MSG_09,
+														Messages.TRANSLATOR_MSG_10);
+									}
+						         } catch (ExecutionException e) {
+									Activator.logError(Messages.TRANSLATOR_MSG_06, e);
+						         }
+						         monitor.done();
+						     }
+						 });
+					} catch (InvocationTargetException e) {
+						Activator.logError(Messages.TRANSLATOR_MSG_07, e);
+						return null;
+					} catch (InterruptedException e) {
+						Activator.logError(Messages.TRANSLATOR_MSG_08, e);
+						return null;
+					} 
+				}
 			}
+		} catch (CoreException e) {
+			Activator.logError(Messages.TRANSLATOR_MSG_07, e);
+			return null;
 		}
 		return null;
 	}
