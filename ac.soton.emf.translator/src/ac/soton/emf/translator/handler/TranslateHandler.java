@@ -73,10 +73,10 @@ public class TranslateHandler extends AbstractHandler {
 		try {
 			if (TranslatorFactory.getFactory().canTranslate(sourceElement.eClass())){
 				// save before transformation
-				final IEditorPart editor = HandlerUtil.getActiveEditor(event);
+//				final IEditorPart editor = HandlerUtil.getActiveEditor(event);
 //				if (!(editor instanceof IEditingDomainProvider)) return null;
-				if (editor != null && editor.isDirty())
-					editor.doSave(new NullProgressMonitor());
+//				if (editor != null && editor.isDirty())
+//					editor.doSave(new NullProgressMonitor());
 				
 				TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 				final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement);
