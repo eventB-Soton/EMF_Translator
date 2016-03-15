@@ -92,11 +92,11 @@ public class TranslateHandler extends AbstractHandler {
 						     public void run(IProgressMonitor monitor) { 
 						    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);
 						         try {
-						        	IStatus status = translateCommand.execute(monitor, editor);
+						        	IStatus status = translateCommand.execute(monitor, null);
 						        	if (!status.isOK()){
 						    			Activator.logError(status.getMessage(), (Exception) status.getException());
 										MessageDialog
-												.openError(editor.getSite().getShell(),
+												.openError(shell,
 														Messages.TRANSLATOR_MSG_09,
 														Messages.TRANSLATOR_MSG_10);
 									}
