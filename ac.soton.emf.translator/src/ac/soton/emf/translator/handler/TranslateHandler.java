@@ -16,19 +16,21 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.edit.domain.IEditingDomainProvider;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import ac.soton.emf.translator.Activator;
@@ -57,25 +59,34 @@ public class TranslateHandler extends AbstractHandler {
 				sourceElement = ((Resource)obj).getContents().get(0);
 			}
 			if (obj instanceof EObject){
-				while (((EObject)obj).eContainer()!=null) obj = ((EObject)obj).eContainer();
+//				while (((EObject)obj).eContainer()!=null) obj = ((EObject)obj).eContainer();
 				sourceElement = (EObject)obj;
 			}
+			else if (obj instanceof IAdaptable) {
+				Object adaptedObj = ((IAdaptable) obj).getAdapter(EObject.class);
+				if (adaptedObj instanceof EObject)
+					sourceElement = (EObject) adaptedObj; 
+			}
+
 		}
 		if (sourceElement==null) return null;
 		try {
 			if (TranslatorFactory.getFactory().canTranslate(sourceElement.eClass())){
 				// save before transformation
 				final IEditorPart editor = HandlerUtil.getActiveEditor(event);
-				if (!(editor instanceof IEditingDomainProvider)) return null;
-				if (editor.isDirty())
+//				if (!(editor instanceof IEditingDomainProvider)) return null;
+				if (editor != null && editor.isDirty())
 					editor.doSave(new NullProgressMonitor());
 				
 				TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 				final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement);
-				
+
 				if (translateCommand.canExecute()) {	
 					// run with progress
-					ProgressMonitorDialog dialog = new ProgressMonitorDialog(editor.getSite().getShell());
+					IWorkbenchWindow activeWorkbenchWindow = HandlerUtil
+							.getActiveWorkbenchWindow(event);
+					final Shell shell = activeWorkbenchWindow.getShell();
+					ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
 					try {
 						dialog.run(true, true, new IRunnableWithProgress(){
 						     public void run(IProgressMonitor monitor) { 
