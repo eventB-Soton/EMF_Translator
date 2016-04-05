@@ -30,6 +30,8 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eventb.emf.persistence.EMFRodinDB;
+import org.rodinp.core.IInternalElement;
 
 import ac.soton.emf.translator.Activator;
 import ac.soton.emf.translator.impl.Messages;
@@ -37,9 +39,9 @@ import ac.soton.emf.translator.impl.TranslateCommand;
 import ac.soton.emf.translator.impl.TranslatorFactory;
 
 /**
- * Import action handler.
+ * handler for commands to run the translator.
  * 
- * @author colin 
+ * @author cfs 
  *
  */
 public class TranslateHandler extends AbstractHandler {
@@ -59,13 +61,14 @@ public class TranslateHandler extends AbstractHandler {
 			if (obj instanceof EObject){
 //				while (((EObject)obj).eContainer()!=null) obj = ((EObject)obj).eContainer();
 				sourceElement = (EObject)obj;
-			}
-			else if (obj instanceof IAdaptable) {
+			}else if (obj instanceof IInternalElement){
+				sourceElement = new EMFRodinDB().loadEventBComponent((IInternalElement)obj) ;
+			}else if (obj instanceof IAdaptable) {
 				Object adaptedObj = ((IAdaptable) obj).getAdapter(EObject.class);
-				if (adaptedObj instanceof EObject)
+				if (adaptedObj instanceof EObject){
 					sourceElement = (EObject) adaptedObj; 
+				}
 			}
-
 		}
 		if (sourceElement==null) return null;
 		try {
