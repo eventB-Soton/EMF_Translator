@@ -35,13 +35,15 @@ import ac.soton.emf.translator.Activator;
 public class TranslateCommand extends AbstractEMFOperation {
 
 	private EObject element;
+	private String commandId;
 
 	/**
+	 * @param commandId 
 	 * @param domain
 	 * @param label
 	 * @param affectedFiles
 	 */
-	public TranslateCommand(TransactionalEditingDomain editingDomain, EObject rootEl) {
+	public TranslateCommand(TransactionalEditingDomain editingDomain, EObject rootEl, String commandId) {
 		super(editingDomain, Messages.TRANSLATOR_MSG_11, null);
 		setOptions(Collections.singletonMap(Transaction.OPTION_UNPROTECTED, Boolean.TRUE));
 		if (rootEl.eIsProxy()){
@@ -49,6 +51,7 @@ public class TranslateCommand extends AbstractEMFOperation {
 		}else{
 			this.element = rootEl;			
 		}
+		this.commandId = commandId;
 	}
 	
 	@Override
@@ -75,6 +78,7 @@ public class TranslateCommand extends AbstractEMFOperation {
 		try {
 			
 			ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+
 				public void run(final IProgressMonitor monitor) throws CoreException{
 					TransactionalEditingDomain editingDomain = getEditingDomain();
 					final List<Resource> modifiedResources;
@@ -84,7 +88,7 @@ public class TranslateCommand extends AbstractEMFOperation {
 			        monitor.subTask(Messages.TRANSLATOR_MSG_14);
 			        
 					//try to create an appropriate translator
-					Translator translator = TranslatorFactory.getFactory().createTranslator(element.eClass());
+					Translator translator = TranslatorFactory.getFactory().createTranslator(commandId, element.eClass());
 					monitor.worked(2);
 			        monitor.subTask(Messages.TRANSLATOR_MSG_15);
 			        

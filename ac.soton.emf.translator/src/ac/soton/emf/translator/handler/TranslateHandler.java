@@ -70,9 +70,11 @@ public class TranslateHandler extends AbstractHandler {
 				}
 			}
 		}
+		
 		if (sourceElement==null) return null;
 		try {
-			if (TranslatorFactory.getFactory().canTranslate(sourceElement.eClass())){
+			String commandId = event.getCommand().getId();
+			if (TranslatorFactory.getFactory().canTranslate(commandId, sourceElement.eClass())){
 				// save before transformation
 //				final IEditorPart editor = HandlerUtil.getActiveEditor(event);
 //				if (!(editor instanceof IEditingDomainProvider)) return null;
@@ -80,7 +82,7 @@ public class TranslateHandler extends AbstractHandler {
 //					editor.doSave(new NullProgressMonitor());
 				
 				TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-				final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement);
+				final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement, commandId);
 
 				if (translateCommand.canExecute()) {	
 					// run with progress

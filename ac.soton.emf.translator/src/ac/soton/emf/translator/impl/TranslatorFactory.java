@@ -32,7 +32,7 @@ public class TranslatorFactory {
 	
 	
 	//cached store of translator configurations that have been loaded from extension points
-	private Map<EClassifier,TranslatorConfig> translatorConfigRegistry = new HashMap<EClassifier, TranslatorConfig  >();
+	private Map<String,TranslatorConfig> translatorConfigRegistry = new HashMap<String, TranslatorConfig  >();
 	
 	
 	/*
@@ -48,6 +48,7 @@ public class TranslatorFactory {
 					EPackage rootSourcePackage = EPackage.Registry.INSTANCE.getEPackage(translatorExtensionElement.getAttribute(Identifiers.EXTPT_RULE_SOURCEPACKAGE));
 					EClassifier rootSourceClass = rootSourcePackage.getEClassifier(translatorExtensionElement.getAttribute(Identifiers.EXTPT_RULE_ROOTSOURCECLASS));
 					String translatorID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_RULE_TRANSLATORID);
+					String commandID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_RULE_COMMANDID);
 					final IAdapter adapter = (IAdapter) translatorExtensionElement.createExecutableExtension(Identifiers.EXTPT_RULE_ADAPTERCLASS);
 					if (rootSourcePackage!= null) {
 						TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter);
@@ -80,7 +81,7 @@ public class TranslatorFactory {
 	
 						}
 						//save config data in case another translator instance is needed for this EClass
-						if (translatorConfig != null) translatorConfigRegistry.put(rootSourceClass,translatorConfig);
+						if (translatorConfig != null) translatorConfigRegistry.put(commandID,translatorConfig);
 					}
 				} catch (final CoreException e) {
 					throw e;
@@ -100,8 +101,9 @@ public class TranslatorFactory {
 
 
 
-	public boolean canTranslate(EClassifier rootSourceClass){
-		return translatorConfigRegistry.containsKey(rootSourceClass);
+	public boolean canTranslate(String commandId, EClassifier rootSourceClass){
+		return translatorConfigRegistry.containsKey(commandId) &&
+				translatorConfigRegistry.get(commandId).rootSourceClass.equals(rootSourceClass);
 	}
 	
 	/**
@@ -111,9 +113,9 @@ public class TranslatorFactory {
 	 * @param rootSourceClass	- the EClass of the root element that this is a translator for
 	 */
 		
-	public Translator createTranslator(EClass rootSourceClass){ 	
-		if (translatorConfigRegistry.containsKey(rootSourceClass)){
-			return new Translator(translatorConfigRegistry.get(rootSourceClass));
+	public Translator createTranslator(String commandId, EClass rootSourceClass){ 	
+		if (canTranslate(commandId, rootSourceClass)){
+			return new Translator(translatorConfigRegistry.get(commandId));
 		}else{
 			return null;
 		}

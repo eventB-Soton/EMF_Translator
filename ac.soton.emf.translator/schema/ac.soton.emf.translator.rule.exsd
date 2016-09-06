@@ -98,6 +98,14 @@
                </appinfo>
             </annotation>
          </attribute>
+         <attribute name="commandID" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The unique identifier of a command that invokes this translator. 
+(This must be unique to this translation as it will be used to select the correct translator when the command is invoked.)
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
