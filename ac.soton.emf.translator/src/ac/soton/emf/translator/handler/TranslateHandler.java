@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -46,6 +47,7 @@ import ac.soton.emf.translator.impl.TranslatorFactory;
  */
 public class TranslateHandler extends AbstractHandler {
 	
+	IStatus status = null;
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
 	 */
@@ -72,56 +74,61 @@ public class TranslateHandler extends AbstractHandler {
 		}
 		
 		if (sourceElement==null) return null;
-		try {
+		IWorkbenchWindow activeWorkbenchWindow = HandlerUtil.getActiveWorkbenchWindow(event);
+		final Shell shell = activeWorkbenchWindow.getShell();
 			String commandId = event.getCommand().getId();
-			if (TranslatorFactory.getFactory().canTranslate(commandId, sourceElement.eClass())){
-				// save before transformation
-//				final IEditorPart editor = HandlerUtil.getActiveEditor(event);
-//				if (!(editor instanceof IEditingDomainProvider)) return null;
-//				if (editor != null && editor.isDirty())
-//					editor.doSave(new NullProgressMonitor());
+			
+			//get trasnslator factory
+			TranslatorFactory factory = null;
+			try {
+				factory = TranslatorFactory.getFactory();
+			} catch (CoreException e) {
+				Activator.logError(Messages.TRANSLATOR_MSG_07, e);
+				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
+			}
+		
+			if (factory != null && factory.canTranslate(commandId, sourceElement.eClass())){
 				
 				TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 				final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement, commandId);
 
 				if (translateCommand.canExecute()) {	
 					// run with progress
-					IWorkbenchWindow activeWorkbenchWindow = HandlerUtil
-							.getActiveWorkbenchWindow(event);
-					final Shell shell = activeWorkbenchWindow.getShell();
 					ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
+					
 					try {
 						dialog.run(true, true, new IRunnableWithProgress(){
 						     public void run(IProgressMonitor monitor) { 
 						    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);
 						         try {
-						        	IStatus status = translateCommand.execute(monitor, null);
-						        	if (!status.isOK()){
-						    			Activator.logError(status.getMessage(), (Exception) status.getException());
-										MessageDialog
-												.openError(shell,
-														Messages.TRANSLATOR_MSG_09,
-														Messages.TRANSLATOR_MSG_10);
-									}
+						        	status = translateCommand.execute(monitor, null);
 						         } catch (ExecutionException e) {
+						        	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_06, e);
 									Activator.logError(Messages.TRANSLATOR_MSG_06, e);
 						         }
 						         monitor.done();
 						     }
 						 });
+						
 					} catch (InvocationTargetException e) {
+			        	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
 						Activator.logError(Messages.TRANSLATOR_MSG_07, e);
 						return null;
+						
 					} catch (InterruptedException e) {
+			        	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
 						Activator.logError(Messages.TRANSLATOR_MSG_08, e);
 						return null;
-					} 
+						
+					}finally{
+						if (!status.isOK()){
+							MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
+						}
+					}
+					
 				}
 			}
-		} catch (CoreException e) {
-			Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-			return null;
-		}
 		return null;
 	}
+	
 }
