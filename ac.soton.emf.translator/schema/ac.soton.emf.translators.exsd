@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="ac.soton.emf.translator" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="ac.soton.emf.translator" id="ac.soton.emf.translators" name="translator"/>
+      </appinfo>
+      <documentation>
+         This extension point allows contributors to contribute their inport/export translator
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+         <documentation>
+            Defines translators that translate EMF models into other EMF models.
+Rules for the translator should be defined in another extension point ac.ston.emf.translator.ruleset
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="translator"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  optional id for this part of the extension
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  optional user friendly name for this part of the extension
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="translator">
+      <annotation>
+         <documentation>
+            Defines a translator
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  optional user friendly name for this translator
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="translator_id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  An identifier used to identify this translator exclusively and used to annotate translated elements.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="source_package" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Namespace URI of the emf package which the root source element is from. The package will be retrieved from the package registry using EPackage.Registry.INSTANCE.getEPackage(nsURI)
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="root_source_class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The (unqualified) name of an EMF meta classifier. The translator will be used for elements that subclass this kind.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="adapter_class" type="string">
+            <annotation>
+               <documentation>
+                  The fully qualified name of a class that implements IAdapter
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":ac.soton.emf.translator.configuration.IAdapter"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="command_id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The unique identifier of a command that invokes this translator. 
+(This must be unique to this translation as it will be used to select the correct translator when the command is invoked.)
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         2.0.0
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="examples"/>
+      </appinfo>
+      <documentation>
+         [Enter extension point usage example here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="apiinfo"/>
+      </appinfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="implementation"/>
+      </appinfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+
+</schema>

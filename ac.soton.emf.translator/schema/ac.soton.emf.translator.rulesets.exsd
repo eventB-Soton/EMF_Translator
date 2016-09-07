@@ -3,10 +3,10 @@
 <schema targetNamespace="ac.soton.emf.translator" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appinfo>
-         <meta.schema plugin="ac.soton.emf.translator" id="ac.soton.emf.translator" name="translator rule"/>
+         <meta.schema plugin="ac.soton.emf.translator" id="ac.soton.emf.translator.rulesets" name="translator rule set"/>
       </appinfo>
       <documentation>
-         This extension point allows contributors to contribute the rules of their inport/export translator
+         This extension point allows contributors to contribute the rules of their translator
       </documentation>
    </annotation>
 
@@ -16,12 +16,12 @@
             <meta.element />
          </appinfo>
          <documentation>
-            Defines translators that translate EMF models into other EMF models.
+            Defines rules for translators that translate EMF models into other EMF models.
          </documentation>
       </annotation>
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
-            <element ref="translator"/>
+            <element ref="ruleset"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -50,10 +50,10 @@
       </complexType>
    </element>
 
-   <element name="translator">
+   <element name="ruleset">
       <annotation>
          <documentation>
-            Defines a translator
+            Defines a set of rules to be used with the referenced translator
          </documentation>
       </annotation>
       <complexType>
@@ -63,46 +63,14 @@
          <attribute name="name" type="string">
             <annotation>
                <documentation>
-                  optional user friendly name for this translator
+                  optional user friendly name for this rule set
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="translatorID" type="string" use="required">
+         <attribute name="translator_id" type="string" use="required">
             <annotation>
                <documentation>
-                  An identifier used to identify this translator exclusively and used to annotate translated elements.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="sourcePackage" type="string" use="required">
-            <annotation>
-               <documentation>
-                  Namespace URI of the emf package which the root source element is from. The package will be retrieved from the package registry using EPackage.Registry.INSTANCE.getEPackage(nsURI)
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="root_source_class" type="string" use="required">
-            <annotation>
-               <documentation>
-                  The (unqualified) name of an EMF meta classifier. The translator will be used for elements that subclass this kind.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="adapter_class" type="string">
-            <annotation>
-               <documentation>
-                  The fully qualified name of a class that implements IAdapter
-               </documentation>
-               <appinfo>
-                  <meta.attribute kind="java" basedOn=":ac.soton.emf.translator.configuration.IAdapter"/>
-               </appinfo>
-            </annotation>
-         </attribute>
-         <attribute name="commandID" type="string" use="required">
-            <annotation>
-               <documentation>
-                  The unique identifier of a command that invokes this translator. 
-(This must be unique to this translation as it will be used to select the correct translator when the command is invoked.)
+                  The identifier of a translator that this set of rules belongs to.
                </documentation>
             </annotation>
          </attribute>
@@ -123,7 +91,7 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="sourcePackage" type="string">
+         <attribute name="source_package" type="string">
             <annotation>
                <documentation>
                   OPTIONAL Namespace URI of the emf package which the source element for this rule is from. The package will be retrieved from the package registry using EPackage.Registry.INSTANCE.getEPackage(nsURI)
@@ -149,31 +117,6 @@ e.g. Invariant
                </appinfo>
             </annotation>
          </attribute>
-         <attribute name="target_feature" type="string">
-            <annotation>
-               <documentation>
-                  CURRENTLY NOT USED
-The EMF id of an EReference feature in the target meta-model which will contain the translated target element
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="target_priority" type="string">
-            <annotation>
-               <documentation>
-                  CURRENTLY NOT USED (the priorities shown here can be set in the translation descriptors produced by rules).
-                  
-Can be used to indicate positioning within the containment feature. 
-
-10 - must come first
-1 - not important
----user entered items---
-0 must come after user entered items
--10 must come last
-
-The numbers can be used to ensure relative positioning within the rules of this translator
-               </documentation>
-            </annotation>
-         </attribute>
       </complexType>
    </element>
 
@@ -182,7 +125,7 @@ The numbers can be used to ensure relative positioning within the rules of this 
          <meta.section type="since"/>
       </appinfo>
       <documentation>
-         [Enter the first release in which this extension point appears.]
+         2.0.0
       </documentation>
    </annotation>
 

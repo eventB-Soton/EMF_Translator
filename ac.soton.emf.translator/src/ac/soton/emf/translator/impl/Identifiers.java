@@ -15,15 +15,19 @@ import org.eclipse.osgi.util.NLS;
 public class Identifiers extends NLS {
 	private static final String BUNDLE_NAME = "ac.soton.emf.translator.impl.identifiers"; //$NON-NLS-1$
 
-	public static String EXTPT_RULE_ID;
-	public static String EXTPT_RULE_ROOTSOURCECLASS;
-	public static String EXTPT_RULE_TRANSLATORID;
-	public static String EXTPT_RULE_COMMANDID;
-	public static String EXTPT_RULE_SOURCEPACKAGE;
-	public static String EXTPT_RULE_ADAPTERCLASS;
-	public static String EXTPT_RULE_RULE;
-	public static String EXTPT_RULE_RULECLASS;
-	public static String EXTPT_RULE_SOURCECLASS;
+	public static String EXTPT_TRANSLATORS_EXTPTID;
+	public static String EXTPT_TRANSLATORS_TRANSLATOR_TRANSLATORID;
+	public static String EXTPT_TRANSLATORS_TRANSLATOR_ROOTSOURCECLASS;
+	public static String EXTPT_TRANSLATORS_TRANSLATOR_COMMANDID;
+	public static String EXTPT_TRANSLATORS_TRANSLATOR_SOURCEPACKAGE;
+	public static String EXTPT_TRANSLATORS_TRANSLATOR_ADAPTERCLASS;
+
+	public static String EXTPT_RULESETS_EXTPTID;
+	public static String EXTPT_RULESETS_RULESET_TRANSLATORID;
+	public static String EXTPT_RULESETS_RULESET_RULE;
+	public static String EXTPT_RULESETS_RULESET_RULE_RULECLASS;
+	public static String EXTPT_RULESETS_RULESET_RULE_SOURCECLASS;
+	public static String EXTPT_RULESETS_RULESET_RULE_SOURCEPACKAGE;
 
 	
 	static {

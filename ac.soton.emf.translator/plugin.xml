@@ -2,6 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
 
-   <extension-point id="ac.soton.emf.translator.rule" name="translator rule" schema="schema/ac.soton.emf.translator.rule.exsd"/>
-  
+   <extension-point id="ac.soton.emf.translators" name="translators" schema="schema/ac.soton.emf.translators.exsd"/>
+   <extension-point id="ac.soton.emf.translator.rulesets" name="translator rulesets" schema="schema/ac.soton.emf.translator.rulesets.exsd"/>
+     
 </plugin>
