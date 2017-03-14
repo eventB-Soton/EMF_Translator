@@ -35,7 +35,7 @@ import ac.soton.emf.translator.Activator;
 public class TranslateCommand extends AbstractEMFOperation {
 
 	private EObject element;
-	private String commandId;
+	private Translator translator;
 
 	/**
 	 * @param commandId 
@@ -43,7 +43,7 @@ public class TranslateCommand extends AbstractEMFOperation {
 	 * @param label
 	 * @param affectedFiles
 	 */
-	public TranslateCommand(TransactionalEditingDomain editingDomain, EObject rootEl, String commandId) {
+	public TranslateCommand(TransactionalEditingDomain editingDomain, EObject rootEl, Translator translator) {
 		super(editingDomain, Messages.TRANSLATOR_MSG_11, null);
 		setOptions(Collections.singletonMap(Transaction.OPTION_UNPROTECTED, Boolean.TRUE));
 		if (rootEl.eIsProxy()){
@@ -51,7 +51,7 @@ public class TranslateCommand extends AbstractEMFOperation {
 		}else{
 			this.element = rootEl;			
 		}
-		this.commandId = commandId;
+		this.translator = translator;		
 	}
 	
 	@Override
@@ -85,23 +85,13 @@ public class TranslateCommand extends AbstractEMFOperation {
 					
 					monitor.beginTask(Messages.TRANSLATOR_MSG_13(element.eClass().getName()),10);							
 					monitor.worked(1);
-			        monitor.subTask(Messages.TRANSLATOR_MSG_14);
-			        
-					//try to create an appropriate translator
-					Translator translator = TranslatorFactory.getFactory().createTranslator(commandId, element.eClass());
-					monitor.worked(2);
-			        monitor.subTask(Messages.TRANSLATOR_MSG_15);
-			        
-			        //try to run the translation
-					modifiedResources = translator.translate(editingDomain,element);
 					
+			        monitor.subTask(Messages.TRANSLATOR_MSG_15);	
+			        modifiedResources = translator.translate(editingDomain, element);
+			        
 					monitor.worked(4);
 					if (modifiedResources == null){
-						
-						//ErrorDialog errorDialog = new ErrorDialog(diagramEditor.getSite().getShell(), label, label, null, 0); 
-						//should display a message here 
-						//"Translation Failed - see error log for details"
-						
+						monitor.subTask(Messages.TRANSLATOR_MSG_07);
 					}else{
 						//try to save all the modified resources
 				        monitor.subTask(Messages.TRANSLATOR_MSG_16);

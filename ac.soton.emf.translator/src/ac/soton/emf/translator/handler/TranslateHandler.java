@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -35,9 +34,8 @@ import org.eventb.emf.persistence.EMFRodinDB;
 import org.rodinp.core.IInternalElement;
 
 import ac.soton.emf.translator.Activator;
+import ac.soton.emf.translator.TranslatorFactory;
 import ac.soton.emf.translator.impl.Messages;
-import ac.soton.emf.translator.impl.TranslateCommand;
-import ac.soton.emf.translator.impl.TranslatorFactory;
 
 /**
  * handler for commands to run the translator.
@@ -53,15 +51,11 @@ public class TranslateHandler extends AbstractHandler {
 	 */
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		EObject sourceElement = null;
+		final EObject sourceElement; // = null;
 		ISelection selection = HandlerUtil.getCurrentSelection(event);
 		if (selection instanceof TreeSelection){
 			Object obj = ((TreeSelection)selection).getFirstElement();
-			if (obj instanceof Resource){
-				sourceElement = ((Resource)obj).getContents().get(0);
-			}
 			if (obj instanceof EObject){
-//				while (((EObject)obj).eContainer()!=null) obj = ((EObject)obj).eContainer();
 				sourceElement = (EObject)obj;
 			}else if (obj instanceof IInternalElement){
 				sourceElement = new EMFRodinDB().loadEventBComponent((IInternalElement)obj) ;
@@ -69,66 +63,52 @@ public class TranslateHandler extends AbstractHandler {
 				Object adaptedObj = ((IAdaptable) obj).getAdapter(EObject.class);
 				if (adaptedObj instanceof EObject){
 					sourceElement = (EObject) adaptedObj; 
-				}
-			}
-		}
+				} else return null;
+			}else if (obj instanceof Resource){
+				sourceElement = ((Resource)obj).getContents().get(0);
+			}else return null;
+		} else return null;
 		
 		if (sourceElement==null) return null;
+		
 		IWorkbenchWindow activeWorkbenchWindow = HandlerUtil.getActiveWorkbenchWindow(event);
 		final Shell shell = activeWorkbenchWindow.getShell();
-			String commandId = event.getCommand().getId();
+			final String commandId = event.getCommand().getId();
 			
-			//get trasnslator factory
-			TranslatorFactory factory = null;
+			//get translator factory
 			try {
-				factory = TranslatorFactory.getFactory();
-			} catch (CoreException e) {
-				Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
-			}
-		
-			if (factory != null && factory.canTranslate(commandId, sourceElement.eClass())){
-				
-				TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-				final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement, commandId);
-
-				if (translateCommand.canExecute()) {	
-					// run with progress
+				final TranslatorFactory factory = TranslatorFactory.getFactory();
+				if (factory != null && factory.canTranslate(commandId, sourceElement.eClass())){
 					ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
-					
 					try {
 						dialog.run(true, true, new IRunnableWithProgress(){
-						     public void run(IProgressMonitor monitor) { 
-						    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);
-						         try {
-						        	status = translateCommand.execute(monitor, null);
-						         } catch (ExecutionException e) {
-						        	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_06, e);
-									Activator.logError(Messages.TRANSLATOR_MSG_06, e);
-						         }
-						         monitor.done();
-						     }
-						 });
-						
+							public void run(IProgressMonitor monitor) throws InvocationTargetException { 
+								try {
+									factory.translate(sourceElement, commandId, monitor);
+								} catch (ExecutionException e) {
+									throw new InvocationTargetException(e);
+								}
+							}
+						});
 					} catch (InvocationTargetException e) {
-			        	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
+				    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
 						Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-						return null;
 						
 					} catch (InterruptedException e) {
-			        	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
+				    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
 						Activator.logError(Messages.TRANSLATOR_MSG_08, e);
-						return null;
 						
 					}finally{
 						if (!status.isOK()){
 							MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
 						}
 					}
-					
 				}
+			} catch (CoreException e) {
+				Activator.logError(Messages.TRANSLATOR_MSG_07, e);
+				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
 			}
 		return null;
 	}
-	
+		
 }
