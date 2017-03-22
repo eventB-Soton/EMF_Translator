@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -50,7 +51,7 @@ public class TranslateHandler extends AbstractHandler {
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
 	 */
 	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
+	public final Object execute(ExecutionEvent event) throws ExecutionException {
 		final EObject sourceElement; // = null;
 		ISelection selection = HandlerUtil.getCurrentSelection(event);
 		if (selection instanceof TreeSelection){
@@ -84,8 +85,11 @@ public class TranslateHandler extends AbstractHandler {
 						dialog.run(true, true, new IRunnableWithProgress(){
 							public void run(IProgressMonitor monitor) throws InvocationTargetException { 
 								try {
-									factory.translate(sourceElement, commandId, monitor);
-								} catch (ExecutionException e) {
+									SubMonitor submonitor = SubMonitor.convert(monitor, "preProcessing", 3);
+									preProcessing(sourceElement, commandId, submonitor.newChild(1));
+									status = factory.translate(sourceElement, commandId, submonitor.newChild(1));
+									postProcessing(sourceElement, commandId, submonitor.newChild(1));
+								} catch (Exception e) {
 									throw new InvocationTargetException(e);
 								}
 							}
@@ -99,7 +103,7 @@ public class TranslateHandler extends AbstractHandler {
 						Activator.logError(Messages.TRANSLATOR_MSG_08, e);
 						
 					}finally{
-						if (!status.isOK()){
+						if (status != null && !status.isOK()){
 							MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
 						}
 					}
@@ -110,5 +114,30 @@ public class TranslateHandler extends AbstractHandler {
 			}
 		return null;
 	}
+
+	
+	/**
+	 * This can be overridden to add some post-processing after the translation
+	 * default implementation does nothing
+	 * @param sourceElement
+	 * @param commandId
+	 * @param monitor
+	 */
+	protected void preProcessing(EObject sourceElement, String commandId, IProgressMonitor monitor) throws Exception {
+        monitor.done();
+	}
 		
+	
+	/**
+	 * This can be overridden to add some pre-processing before the translation
+	 * default implementation does nothing
+	 * @param sourceElement
+	 * @param commandId
+	 * @param monitor
+	 * @throws CoreException 
+	 */
+	protected void postProcessing(EObject sourceElement, String commandId, IProgressMonitor monitor) throws Exception {
+        monitor.done();
+	}
+	
 }
