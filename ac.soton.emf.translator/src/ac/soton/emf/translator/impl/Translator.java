@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Status;
@@ -355,6 +356,7 @@ public class Translator {
 			deferredRules.keySet().removeAll(empties);
 			if (progress == false) {
 				if (late){ //o-oh, no progress when already doing the late rules 
+					printRules();
 					throw new Exception(Messages.TRANSLATOR_MSG_00);
 				}
 				late = true; //enable the late rules
@@ -362,6 +364,18 @@ public class Translator {
 		} 
 	}
 	
+	/**
+	 * 
+	 */
+	private void printRules() {
+		System.out.println("Not making progress on the following rules:");
+		for (Entry<EObject, List<IRule>> entry : deferredRules.entrySet()){
+			System.out.println(entry.getKey());
+			System.out.println(entry.getValue());
+		}
+	}
+
+
 	/*
 	 * recursive routine to traverse model firing appropriate rules
 	 */
