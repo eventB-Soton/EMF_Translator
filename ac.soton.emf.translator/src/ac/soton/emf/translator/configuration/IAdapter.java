@@ -10,6 +10,7 @@
  *******************************************************************************/
 package ac.soton.emf.translator.configuration;
 
+import java.util.List;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 
@@ -17,6 +18,14 @@ import ac.soton.emf.translator.TranslationDescriptor;
 
 public interface IAdapter {
 
+	/**
+	 * If the adapter needs to store translation wide state it can be set up here
+	 * This method will be called at the start of each translation with the source element of
+	 * the translation
+	 * @param sourceElement
+	 */
+	void initialiseAdapter(Object sourceElement);
+	
 	/**
 	 * if the translation descriptor describes or requires the translation of a new resource level component,
 	 * this should return the resource URI to be used in creating the new resource.
@@ -96,5 +105,13 @@ public interface IAdapter {
 	 * @param object
 	 */
 	void setPriority(int pri, Object value);
+
+	/**
+	 * returns the position in the given List feature for the addition of the given new object
+	 * @param list
+	 * @param pri
+	 * @return
+	 */
+	int getPos(List<?> list, Object object);
 	
 }

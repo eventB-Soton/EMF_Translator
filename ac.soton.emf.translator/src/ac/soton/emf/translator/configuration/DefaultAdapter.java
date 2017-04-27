@@ -10,6 +10,8 @@
  *******************************************************************************/
 package ac.soton.emf.translator.configuration;
 
+import java.util.List;
+
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 
@@ -26,6 +28,15 @@ import ac.soton.emf.translator.TranslationDescriptor;
 
 public class DefaultAdapter implements IAdapter {
 
+
+	/**
+	 * do nothing
+	 * @see ac.soton.emf.translator.configuration.IAdapter#initialiseAdapter(java.lang.Object)
+	 */
+	@Override
+	public void initialiseAdapter(Object sourceElement) {		
+	}
+	
 	/**
 	 * return null
 	 */
@@ -45,7 +56,9 @@ public class DefaultAdapter implements IAdapter {
 	}
 	
 	/**
-	 * filter nothing
+	 * This implementation always returns true (i.e. do not filter)
+	 * 
+	 * @see ac.soton.emf.translator.configuration.IAdapter#outputFilter(java.lang.Object)
 	 */
 	@Override
 	public boolean outputFilter(TranslationDescriptor translationDescriptor) {
@@ -94,5 +107,15 @@ public class DefaultAdapter implements IAdapter {
 	@Override
 	public void setPriority(int priority, Object object) {
 	}
+
+	/** 
+	 * returns the end of the list
+	 */
+	@Override
+	public int getPos(List<?> list, Object object) {
+		return list.size();
+	}
+
+
 	
 }

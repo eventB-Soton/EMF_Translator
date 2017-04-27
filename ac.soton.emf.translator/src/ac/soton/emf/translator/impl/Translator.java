@@ -94,6 +94,9 @@ public class Translator {
 				throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_02(sourceElement)));
 			}
 			
+			//initialise the adapter for this translation
+			translatorConfig.adapter.initialiseAdapter(sourceElement);
+			
 			//Obtain an ID from the source element
 			sourceID = translatorConfig.adapter.getSourceId(sourceElement);
 			
@@ -239,32 +242,9 @@ public class Translator {
 						if (featureValue instanceof EList){	
 							if(translationDescriptor.remove == false){											
 								translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
-								//translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
-								//add the new value to the list at the correct index - i.e. after any higher priority elements and
-								//after stuff translated by earlier extensions which has the same priority
-								int pos = 0;
-//								for (int i=0; i<((EList)featureValue).size(); i++){
-//									Object v = ((EList)featureValue).get(i);
-//									if(v instanceof EventBElement){
-//										Attribute at = ((EventBElement)v).getAttributes().get(AttributeIdentifiers.GENERATOR_ID_KEY);
-//										String gb = (String) (at==null? null : at.getValue());
-//										Integer od = extensionOrder.get(gb);
-//										if (od==null) od = extensionOrder.size(); // not an extension => user entered stuff comes last
-//										at = ((EventBElement)v).getAttributes().get(AttributeIdentifiers.PRIORITY_KEY);
-//										Integer pr = (Integer) (at==null? null : at.getValue());
-//										if (pr==null) pr = 0; // no priority => user stuff at priority 0
-//										//priority order = highest 1..10,0,-1..-10
-//										Integer exo = extensionOrder.containsKey(translatedByID)? extensionOrder.get(translatedByID) : 0;
-//										if ((pr>0 && pr < pri) || (pr < 1 && pr > pri) || (pr==pri && od<exo)){
-//											pos = i+1;
-//										};
-//										
-//									}
-//								}
+								translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
 								
-								//TODO: better positioning neeeded???
-								//for now put at end of list
-								pos = ((EList)featureValue).size();
+								int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
 
 								((EList)featureValue).add(pos, translationDescriptor.value);
 										
