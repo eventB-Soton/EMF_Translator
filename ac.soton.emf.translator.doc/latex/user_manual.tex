@@ -1,0 +1,91 @@
+\documentclass[a4paper,10pt]{article}
+%\documentclass[preview=false]{standalone}
+% %%%% Define new conditional \ifplastex
+% %%%% This ensure that the file complied normally without plasTeX.
+\usepackage{plastex}
+
+\usepackage{hyperref}
+
+\ifplastex\else
+\usepackage{standalone} %%%% Only load standalone when not in plasTeX
+\standalonetrue
+\usepackage{longtable} %%%% Only load longtable and ltcaption when not in plasTeX
+\usepackage{ltcaption}
+\fi
+
+% Package for typesetting URLs
+\usepackage{url}
+
+% Package for including graphics.
+\usepackage{graphicx}
+
+\usepackage{multicol}
+
+\usepackage{bsymb}
+
+% Package for typesetting Event-B models
+\usepackage[colour]{eventB}
+%\usepackage{eventB-vhdl}
+
+% Package for typesetting dates and times
+\ifplastex
+\newcommand{\EMFEMFManualDate}{July 27th, 2017}
+\else
+\usepackage{datetime}
+\newdate{EMFEMFManualDate}{27}{7}{2017}
+\fi
+\newcommand{\EMFEMFFeatureVersion}{2.2.1}
+\newcommand{\EMFEMFManualVersion}{0.0.1}
+
+% Title
+\title{EMF2EMF Transformation Framework Developers Manual} 
+
+% Author
+\author{%s
+  Colin Snook\\%
+  ECS, University of Southampton\\%
+  \texttt{\href{mailto:cfs@ecs.soton.ac.uk}{cfs at ecs dot soton dot ac dot uk}}%
+}%
+
+
+% Date
+\date{%
+  Version \EMFEMFManualVersion\\%
+  (for feature version \EMFEMFFeatureVersion)\\
+  \ifplastex
+  \EMFEMFManualDate
+  \else
+  \displaydate{EMFEMFManualDate}%
+  \fi
+}
+
+\begin{document}
+\ifplastex%
+\maketitle% Make title if in plasTeX mode.
+\else%
+ \ifstandalone%
+ \maketitle % Make title if in standalone mode.
+ \else%
+ \fi%
+\fi%
+
+\input{overview}
+
+\input{getting_started}
+
+\input{concepts}
+
+\input{tasks}
+
+\input{reference}
+
+%\input{samples}
+
+\input{legal}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

@@ -1,0 +1,144 @@
+\section{Getting Started}
+\label{sec:getting-started}
+
+\subsection{Setup}
+\label{sec:setup}
+
+\begin{itemize}
+\item 
+In order to start using the EMF2EMF translator you need to make the EMF2EMF translator plugin available to your code. 
+You do this either by importing the plugin into your workspace or by installing it into your plug-in development target.
+While the latter is usually prefereable, at the time of writing there is no published SDK version of the plugin so, for now, we would recommend the first approach so that you have the plug-in source code when you are de-bugging.
+The plug-in can be found in the git repository \textbf{iUML-B\_Utils} on the Rodin Sourceforge project.   
+\begin{verbatim}
+	https://git.code.sf.net/p/rodin-b-sharp/iUML_B_Utils
+\end{verbatim}
+The plug-in you need to import is \texttt{ac.soton.emf.translator}.
+If you prefer to work with the latest release you can find this in the git history of the plug-in and check out that commit.
+
+Alternatively, install into your target platform using the Rodin update site - look for \textbf{EMF utilities (Soton)} under the \textbf{Utilities} category.
+\item 
+Add a dependency to \texttt{ac.soton.emf.translator} in the \texttt{manifest.mf} file of your plugin.
+\end{itemize}
+
+\subsection{Setting up the UI to initiate your translator}
+\label{sec:ui}
+
+Unless you intend to always start your translator programmatically (i.e. from another piece of code), you will need some way to tell your translator to start.
+There are many options for adding commands to the Eclipse UI. As long as you configure a way for the user to invoke the command handler it doesnt matter where you put your additions to the UI. Here, as an example, we show the extensions necessary to add a button in the main toolbar area. This is using standard Eclipse extension points so you can find more details on-line. Basically you need to define a command, a way to invoke that command (e.g. a menu button) and a handler to deal with that command when it is initiated.
+EMF2EMF provides a handler for you, so unless you have a strong reason to modify the way the handler works, it is recommended that you just use the provided one (as explained below). Note that the provided handler \texttt{ac.soton.emf.translator.handler.TranslateHandler} has stubs for pre and post processing. If you need to do any processing before or after your translation, you can extend the provided translator, and then declare your modified translator in the extensions shown below in place of the provided one. The provided handler uses the commandId that you enter below in order to identify and run your translator. (So make sure you invent a unique \textbf{commandId} and use it consistently in all the extensions defined below. To make this clear all fields marked (\textbf{commandId}) must have the same string value and it must be something that no other plug-in developer is likely to choose).
+
+
+\begin{enumerate}
+	\item
+	Open the \texttt{plugin.xml file} of your plug-in and add an extension for \texttt{org.eclipse.ui.commands}. Then via its context menu add a new \texttt{command}. Fill in the extension point element details as follows.
+	\begin{itemize}
+		\item \textbf{id:} (\textbf{commandId}) this must be a unique identifier for the command. e.g. we would use something like \texttt{ac.soton.<pluginName>.<CommandName>}
+		\item \textbf{name:} a name that will appear in the UI to identify the command. e.g. translate x to y.
+		\item \textbf{description:} (optional) some text that will appear (hover) in the UI to describe what the command does.
+		\item \textbf{categoryId:} (optional) the id of a category of commands that this command will be added to. If you dont specify this it will appear in a global default group.
+	\end{itemize}
+	
+	\item
+	Add an extension for \texttt{org.eclipse.ui.menus}. Then via its context menu add a new \texttt{menuContribution}. Fill in the extension point element details as follows.
+	\begin{itemize}
+		\item \textbf{locationURI:} this must be the identifier of a area in the UI that you want to add to. Usually this would be defined in another one of your plug-ins. For example we usually set this to \\
+		\texttt{toolbar:ac.soton.eventb.emf.diagrams.toolbar?after=transformations}
+		which is an area of the main toolbar used for iUML-B menu buttons.
+		\item \textbf{allPopups:} set to \emph{true} - probably not used for the main menu but in case you change to a pop-up menu.
+	\end{itemize}
+	Now right click on the \texttt{menuContribution} and add a child \texttt{command} with details as follows.
+	\begin{itemize}
+		\item \textbf{commandId:} this must be the identifier of the command that you added at the start of of section \ref{sec:ui}.
+		\item \textbf{label:} a name for the menu item (this is what will be written in the menu/toolbar etc.).
+		\item \textbf{icon:} a relative path to the icon to be displayed. Usually \texttt{icons/<myicon>.png}. 
+		\item \textbf{style:} set to \emph{push}
+	\end{itemize}
+		
+	\item
+	Add an extension for \texttt{org.eclipse.ui.handlers}. Then via its context menu add a new \texttt{handler}. Fill in the extension point element details as follows.
+	\begin{itemize}
+		\item \textbf{commandId:} this must be the identifier of the command that you added at the start of of section \ref{sec:ui}.
+		\item \textbf{class:} Set this to a handler which will be called when the user triggers your command.  For example, \texttt{ac.soton.emf.translator.handler.TranslateHandler} is a generic handler provided by EMF2EMF which will look at the commandId and select your translation rules. 
+	\end{itemize}
+	
+\end{enumerate}
+
+
+\subsection{Declaring your translator}
+\label{sec:translatorDecln}
+
+You now need to declare your translator to EMF2EMF so that it knows about your translation and what kind of EMF models it handles. This is also done using extensions in your \texttt{plugin.xml} file. (If you want to look at the definitions of these extension points they are defined in the EMF2EMF plugin, \texttt{ac.soton.emf.translator}).
+We first declare the translator and link it to the command that you defined in section \ref{sec:ui}, then we define a set of rules (ruleset) for the translator. The reason for defining the ruleset separately is so that several rulesets can be defined for the same translator. For example, other developers may want to extend your translator with new translation rules.
+
+%\begin{enumerate}
+%	\item
+	Open the \texttt{plugin.xml} file of your plug-in and add an extension for \texttt{ac.soton.emf.translators}. Then via its context menu add a new \texttt{translator}. Fill in the extension point element details as follows.
+	\begin{itemize}
+		\item \textbf{translator\_id:} this must be a unique identifier for the translator. e.g. we would use something like \texttt{ac.soton.<pluginName>.translator}
+		\item \textbf{source\_package:} this is the nsURI identifier of the source EMF meta-model (ecore). It is used to find the meta-model for your source model that you want to translate. (The nsURI is a property defined in the ecore file).
+		\item \textbf{root\_source\_class:} this is the name of a meta-class in the ecore meta-model defined by source\_package. It is the root (top) level of your source model. Everything that your translator translates must be contained within a tree structure starting from an element of this class. Elements of this class must be contained by the resource (File) when you save your model. Your translator will not start unless you invoke it with one of these selected in the UI.
+		\item \textbf{name:} this is just a readable name used for your translator in the extensions (not very important but helps you maintain these extensions).
+		\item \textbf{commandId:} this must be the identifier of the command that you added at the start of section \ref{sec:ui}.
+		\item \textbf{adapter\_class:} this class, which must implement\\ \texttt{ac.soton.emf.translator.configuration.IAdapter}, provides some methods which configure the translator to your needs. It deals with variations in behaviour which are difficult to configure declaratively. A default adapter which does very little is provided by EMF2EMF. To use this default set \texttt{adapter\_class} to\\ \texttt{ac.soton.emf.translator.configuration.DefaultAdapter}. If you need to configure the behaviour, clicking on the field name \texttt{adapter\_class} will start a wizard to create a new class that implements \texttt{IAdapter}. We recommend setting Superclass to the \texttt{DefaultAdapter} so that you only have to deal with the methods you need to change. More details on configuring the adapter class are given in section \ref{sec:adapter}. 
+	\end{itemize}
+%\end{enumerate}
+
+\subsection{Declaring Rules}
+\label{sec:rulesDecln}
+
+%\begin{enumerate}
+%	\item 
+	Add an extension for \texttt{ac.soton.emf.translator.rulesets}. Then via its context menu add a new \texttt{ruleset}. Fill in the extension point element details as follows.
+	\begin{itemize}
+		\item \textbf{translator\_id:} this must be the id of your translator. I.e. it must match the field with the same name in the translators extension above.
+		\item \textbf{name:} this is just a readable name used for your ruleset in the extensions (not very important but helps you maintain these extensions).
+	\end{itemize}
+	Now right click on the \texttt{ruleset} and add a child \texttt{rule} with details as follows. For this first rule you should focus on something near the root of your model. I.e. the element that contains everything else you want to translate. This does not have to be the root\_source\_class defined in the translators extension but it is the first (highest) level element that is of interest to your translation. For example, a root element is often used as an organisational device for persistence purposes and then it contains some components that you would like to translate.
+	\begin{itemize}
+		\item \textbf{source\_class:} the meta-class of elements that this rule will translate. Unless you specify a different source\_package (see below), the meta-class must be in the ecore meta-model that you specified in the translators extension using the source\_package field in section \ref{sec:translatorDecln}.
+		\item \textbf{rule\_class:} a java class in your plug-in that will do the translation of elements of this kind. As you don't have any rules classes, you can click on the blue field name, \emph{rule\_class} in order to create a new class in your plug-in. Your rule should extend AbstractRule and implement IRule.
+		\item \textbf{name:} this is just a readable name used for your rule in the extensions (not very important but helps you maintain these extensions).
+		\item \textbf{source\_package:} if the source\_class is in the source\_package defined for the translator in section \ref{sec:translatorDecln}, you can leave this field blank. However, sometimes a model may contain children from a different meta-model. In this case you need to specify the nsURI of the ecore meta-model that contains the source\_class.
+	\end{itemize}
+	Now that you have specified a rule for a class of source elements you can start writing some java code to implement the rule. See section \ref{sec:rulesWriting} for details on how to do this. However we recommend that you just add some stub methods first and breakpoint them to check that your declarations in sections \ref{sec:ui}, \ref{sec:translatorDecln} and \ref{sec:rulesDecln} worked and your translator is recognised and called correctly by EMF2EMF. Once you have checked this and discovered how to write rules, you will need to return her to this extension to add more rules for different kinds of source elements that you want to translate (i.e. children of the first source\_class that you translated). The translator will work irrespective of the order of the rule extensions, but it is more efficient if you can declare them in the order of dependencies. I.e. if rule B needs rule A to have fired before it can work, then declare the extension for rule A before rule B. These dependecies are discussed more in section \ref{sec:rulesWriting}. 
+%\end{enumerate}
+
+\subsection{Configuring your translator}
+\label{sec:configure}
+
+\texttt{<TO BE WRITTEN>}
+
+\subsection{Writing Rules}
+\label{sec:rulesWriting}
+
+\texttt{<TO BE WRITTEN>}
+
+\subsection{Release Notes}
+\label{sec:release-notes}
+
+\begin{itemize}
+\item \textbf{2.1.1} - add release history for 2.1.0 to build
+\item \textbf{2.1.0} - Translator - 2.1.0
+	\begin{itemize}
+	\item programmatic invocation
+	\item pre and post processing
+	\item adaptor support for defining position in containment
+	\end{itemize}
+\item \textbf{2.0.0} - Translator - 2.0.0 - more extensible translator extension (ruleset extension)
+\item \textbf{1.1.0} - Translator - 1.1.0 - make handler more flexible to generalise usage
+\item \textbf{1.0.0} - Translator - 1.0.0 - fix dialogue problem
+\end{itemize}
+
+\subsubsection{Known Issues}
+\label{sec:known-issues}
+
+\begin{itemize}
+\item None at the moment!
+\end{itemize}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "user_manual"
+%%% End:
