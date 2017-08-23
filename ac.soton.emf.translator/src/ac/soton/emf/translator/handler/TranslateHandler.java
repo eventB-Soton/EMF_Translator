@@ -117,7 +117,7 @@ public class TranslateHandler extends AbstractHandler {
 
 	
 	/**
-	 * This can be overridden to add some post-processing after the translation
+	 * This can be overridden to add some pre-processing before the translation
 	 * default implementation does nothing
 	 * @param sourceElement
 	 * @param commandId
@@ -129,7 +129,7 @@ public class TranslateHandler extends AbstractHandler {
 		
 	
 	/**
-	 * This can be overridden to add some pre-processing before the translation
+	 * This can be overridden to add some post-processing after the translation
 	 * default implementation does nothing
 	 * @param sourceElement
 	 * @param commandId
