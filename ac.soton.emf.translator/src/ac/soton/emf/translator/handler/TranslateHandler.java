@@ -46,6 +46,7 @@ import ac.soton.emf.translator.impl.Messages;
  */
 public class TranslateHandler extends AbstractHandler {
 	
+	protected Shell shell;
 	IStatus status = null;
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
@@ -73,45 +74,45 @@ public class TranslateHandler extends AbstractHandler {
 		if (sourceElement==null) return null;
 		
 		IWorkbenchWindow activeWorkbenchWindow = HandlerUtil.getActiveWorkbenchWindow(event);
-		final Shell shell = activeWorkbenchWindow.getShell();
-			final String commandId = event.getCommand().getId();
-			
-			//get translator factory
-			try {
-				final TranslatorFactory factory = TranslatorFactory.getFactory();
-				if (factory != null && factory.canTranslate(commandId, sourceElement.eClass())){
-					ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
-					try {
-						dialog.run(true, true, new IRunnableWithProgress(){
-							public void run(IProgressMonitor monitor) throws InvocationTargetException { 
-								try {
-									SubMonitor submonitor = SubMonitor.convert(monitor, "preProcessing", 3);
-									preProcessing(sourceElement, commandId, submonitor.newChild(1));
-									status = factory.translate(sourceElement, commandId, submonitor.newChild(1));
-									postProcessing(sourceElement, commandId, submonitor.newChild(1));
-								} catch (Exception e) {
-									throw new InvocationTargetException(e);
-								}
+		shell = activeWorkbenchWindow.getShell();
+		final String commandId = event.getCommand().getId();
+		
+		//get translator factory
+		try {
+			final TranslatorFactory factory = TranslatorFactory.getFactory();
+			if (factory != null && factory.canTranslate(commandId, sourceElement.eClass())){
+				ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
+				try {
+					dialog.run(true, true, new IRunnableWithProgress(){
+						public void run(IProgressMonitor monitor) throws InvocationTargetException { 
+							try {
+								SubMonitor submonitor = SubMonitor.convert(monitor, "preProcessing", 3);
+								preProcessing(sourceElement, commandId, submonitor.newChild(1));
+								status = factory.translate(sourceElement, commandId, submonitor.newChild(1));
+								postProcessing(sourceElement, commandId, submonitor.newChild(1));
+							} catch (Exception e) {
+								throw new InvocationTargetException(e);
 							}
-						});
-					} catch (InvocationTargetException e) {
-				    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
-						Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-						
-					} catch (InterruptedException e) {
-				    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
-						Activator.logError(Messages.TRANSLATOR_MSG_08, e);
-						
-					}finally{
-						if (status != null && !status.isOK()){
-							MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
 						}
+					});
+				} catch (InvocationTargetException e) {
+			    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
+					Activator.logError(Messages.TRANSLATOR_MSG_07, e);
+					
+				} catch (InterruptedException e) {
+			    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
+					Activator.logError(Messages.TRANSLATOR_MSG_08, e);
+					
+				}finally{
+					if (status != null && !status.isOK()){
+						MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
 					}
 				}
-			} catch (CoreException e) {
-				Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
 			}
+		} catch (CoreException e) {
+			Activator.logError(Messages.TRANSLATOR_MSG_07, e);
+			MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
+		}
 		return null;
 	}
 
