@@ -119,7 +119,8 @@ public class TranslateCommand extends AbstractEMFOperation {
 
 		} catch (CoreException e) {
 			e.printStackTrace();
-			return new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_19, e);
+			Activator.logError(Messages.TRANSLATOR_MSG_19+ " : "+e.getMessage(), e);
+			return new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_19+ " : see error log", e);
 		} finally {
 			monitor.done();
 		}
