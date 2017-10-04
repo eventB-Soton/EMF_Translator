@@ -2,7 +2,7 @@
 <feature
       id="ac.soton.emf.translator.feature"
       label="%featureName"
-      version="2.1.2.qualifier"
+      version="3.0.0.qualifier"
       provider-name="%featureVendor"
       license-feature="org.rodinp.license"
       license-feature-version="1.0.0.release">
