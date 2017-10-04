@@ -27,7 +27,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -52,8 +52,8 @@ public class TranslateHandler extends AbstractHandler {
 	public final Object execute(ExecutionEvent event) throws ExecutionException {
 		final EObject sourceElement;
 		ISelection selection = HandlerUtil.getCurrentSelection(event);
-		if (selection instanceof StructuredSelection && !((StructuredSelection)selection).isEmpty()){
-			Object obj = ((StructuredSelection)selection).getFirstElement();
+		if (selection instanceof IStructuredSelection && !selection.isEmpty()){
+			Object obj = ((IStructuredSelection)selection).getFirstElement();
 			sourceElement = getEObject(obj);
 		} else sourceElement = null;
 		if (sourceElement==null) return null;
