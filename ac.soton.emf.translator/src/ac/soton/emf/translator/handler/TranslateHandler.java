@@ -27,12 +27,10 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
-import org.eventb.emf.persistence.EMFRodinDB;
-import org.rodinp.core.IInternalElement;
 
 import ac.soton.emf.translator.Activator;
 import ac.soton.emf.translator.TranslatorFactory;
@@ -52,24 +50,12 @@ public class TranslateHandler extends AbstractHandler {
 	 */
 	@Override
 	public final Object execute(ExecutionEvent event) throws ExecutionException {
-		final EObject sourceElement; // = null;
+		final EObject sourceElement;
 		ISelection selection = HandlerUtil.getCurrentSelection(event);
-		if (selection instanceof TreeSelection){
-			Object obj = ((TreeSelection)selection).getFirstElement();
-			if (obj instanceof EObject){
-				sourceElement = (EObject)obj;
-			}else if (obj instanceof IInternalElement){
-				sourceElement = new EMFRodinDB().loadEventBComponent((IInternalElement)obj) ;
-			}else if (obj instanceof IAdaptable) {
-				Object adaptedObj = ((IAdaptable) obj).getAdapter(EObject.class);
-				if (adaptedObj instanceof EObject){
-					sourceElement = (EObject) adaptedObj; 
-				} else return null;
-			}else if (obj instanceof Resource){
-				sourceElement = ((Resource)obj).getContents().get(0);
-			}else return null;
-		} else return null;
-		
+		if (selection instanceof IStructuredSelection && !selection.isEmpty()){
+			Object obj = ((IStructuredSelection)selection).getFirstElement();
+			sourceElement = getEObject(obj);
+		} else sourceElement = null;
 		if (sourceElement==null) return null;
 		
 		IWorkbenchWindow activeWorkbenchWindow = HandlerUtil.getActiveWorkbenchWindow(event);
@@ -113,6 +99,32 @@ public class TranslateHandler extends AbstractHandler {
 				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
 			}
 		return null;
+	}
+
+
+	/**
+	 * From the selected object, get an EObject that can be translated.
+	 * The default code handles 
+	 * 	selection is an EObject (return object castr to EObject)
+	 * 	selection is an IAdaptable (return adapted EObject)
+	 *  selection is an EMF Resource (return contained EObject)
+	 * This can be overridden to handle other cases
+	 * @param obj
+	 * @return corresponding EObject to be translated
+	 */
+	protected EObject getEObject(Object obj) {
+		final EObject sourceElement;
+		if (obj instanceof EObject){
+			sourceElement = (EObject)obj;
+		}else if (obj instanceof IAdaptable) {
+			Object adaptedObj = ((IAdaptable) obj).getAdapter(EObject.class);
+			if (adaptedObj instanceof EObject){
+				sourceElement = (EObject) adaptedObj; 
+			} else sourceElement = null;
+		}else if (obj instanceof Resource){
+			sourceElement = ((Resource)obj).getContents().get(0);
+		}else sourceElement = null;
+		return sourceElement;
 	}
 
 	
