@@ -11,6 +11,7 @@
 package ac.soton.emf.translator.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.emf.common.util.EList;
@@ -26,14 +27,14 @@ import ac.soton.emf.translator.utils.Find;
 
 public class Remover {
 
-	private final List<Resource> resources;
-	private Object sourceID;
-	private IAdapter adapter;
+	private final Collection<Resource> resources;
+	private final Object sourceID;
+	private final IAdapter adapter;
 	
 	private List<Resource> modifiedResources;
 	
-	public Remover(final List<Resource> resources, Object sourceID, IAdapter adapter) {
-		this.resources = resources;
+	public Remover(final Collection<Resource> affectedResources, Object sourceID, IAdapter adapter) {
+		this.resources = affectedResources;
 		this.sourceID = sourceID;
 		this.adapter = adapter;
 	}
@@ -46,11 +47,13 @@ public class Remover {
 		modifiedResources = new ArrayList<Resource>();
 		if (canExecute()){
 			for (Resource res : resources){
-				EObject component = res.getContents().get(0);
-				if (component instanceof EObject){
-					List<EObject> previouslyTranslatedElements = getPreviouslyTranslatedElements(component);
-					for (EObject eObject : previouslyTranslatedElements){
-						EcoreUtil.delete(eObject, true);	//this deletes the object from its containment and removes all references to it and its content
+				if (!res.getContents().isEmpty()) {
+					EObject component = res.getContents().get(0);
+					if (component instanceof EObject){
+						List<EObject> previouslyTranslatedElements = getPreviouslyTranslatedElements(component);
+						for (EObject eObject : previouslyTranslatedElements){
+							EcoreUtil.delete(eObject, true);	//this deletes the object from its containment and removes all references to it and its content
+						}
 					}
 				}
 			}
