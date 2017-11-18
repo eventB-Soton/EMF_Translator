@@ -104,6 +104,14 @@ Rules for the translator should be defined in another extension point ac.ston.em
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="self_modifiying" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  set this to true if the translation can modify the resource containing the source element.
+(this affects which EMF editing domain is used in the translation. If true the editing domain of the source element is used. If false a new editing domain is used).
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

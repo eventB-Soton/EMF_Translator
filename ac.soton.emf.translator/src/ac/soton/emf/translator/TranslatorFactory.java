@@ -60,8 +60,9 @@ public class TranslatorFactory {
 					String translatorID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_TRANSLATORID);
 					String commandID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_COMMANDID);
 					final IAdapter adapter = (IAdapter) translatorExtensionElement.createExecutableExtension(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ADAPTERCLASS);
+					String selfModifying = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_SELFMODIFYING);
 					if (rootSourcePackage!= null) {
-						TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter);
+						TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter, selfModifying);
 						
 						for (final IExtension rulesetExtension : Platform.getExtensionRegistry().getExtensionPoint(Identifiers.EXTPT_RULESETS_EXTPTID).getExtensions()) {				
 							for (final IConfigurationElement rulesetExtensionElement : rulesetExtension.getConfigurationElements()) {
@@ -135,9 +136,13 @@ public class TranslatorFactory {
 			monitor.subTask(Messages.TRANSLATOR_MSG_07);
 			status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, "could not create translator for  "+commandId); 
 		}else{
-			TransactionalEditingDomain editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-			final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement, translator);
-	
+			TransactionalEditingDomain editingDomain = null;
+			if (translatorConfigRegistry.get(commandId).selfModifying){
+				editingDomain = TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet());
+			}else{
+				editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+			}
+			final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement, translator);	
 			if (translateCommand.canExecute()) {	
 				// run with progress
 		    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);

@@ -27,12 +27,14 @@ public class TranslatorConfig{
 	public EClassifier rootSourceClass;
 	public Map<EClassifier, List<IRule>> ruleMapping;
 	public IAdapter adapter;
+	public boolean selfModifying;
 	
-	public TranslatorConfig(String translatorID, EPackage rootSourcePackage, EClassifier rootSourceClass, IAdapter adapter){
+	public TranslatorConfig(String translatorID, EPackage rootSourcePackage, EClassifier rootSourceClass, IAdapter adapter, String selfModifying){
 		this.translatorID = translatorID;
 		this.rootSourcePackage = rootSourcePackage;
 		this.rootSourceClass = rootSourceClass;
 		this.adapter = adapter;
+		this.selfModifying = Boolean.valueOf(selfModifying);
 		ruleMapping = new HashMap<EClassifier, List<IRule>>();
 	}
 	
