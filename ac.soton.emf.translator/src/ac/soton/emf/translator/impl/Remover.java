@@ -53,6 +53,7 @@ public class Remover {
 						List<EObject> previouslyTranslatedElements = getPreviouslyTranslatedElements(component);
 						for (EObject eObject : previouslyTranslatedElements){
 							EcoreUtil.delete(eObject, true);	//this deletes the object from its containment and removes all references to it and its content
+							if (!modifiedResources.contains(res)) modifiedResources.add(res);
 						}
 					}
 				}
@@ -80,7 +81,8 @@ public class Remover {
 			for (EReference ref : refs){
 				if (!ref.isContainment()){
 					Object target = eObject.eGet(ref);
-					if (target instanceof EObject && !((EObject)target).eResource().equals(root.eResource())){
+					if (target instanceof EObject && ((EObject)target).eResource()!=null &&
+							!((EObject)target).eResource().equals(root.eResource())){
 						remove.addAll(getPreviouslyTranslatedElements((EObject) target));
 					}
 				}
