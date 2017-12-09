@@ -38,6 +38,13 @@ public class DefaultAdapter implements IAdapter {
 	}
 	
 	/**
+	 * return true if feature is null
+	 */
+	public boolean isRoot(TranslationDescriptor translationDescriptor) {
+		return translationDescriptor.feature==null;
+	}
+	
+	/**
 	 * return null
 	 */
 	@Override

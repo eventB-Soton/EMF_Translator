@@ -27,8 +27,15 @@ public interface IAdapter {
 	void initialiseAdapter(Object sourceElement);
 	
 	/**
-	 * if the translation descriptor describes or requires the translation of a new resource level component,
-	 * this should return the resource URI to be used in creating the new resource.
+	 * returns true if the translation descriptor describes a new root level element
+	 * @param translationDescriptor
+	 * @return
+	 */
+	boolean isRoot(TranslationDescriptor translationDescriptor);
+	
+	/**
+	 * 
+	 * This should return the resource URI to be used in creating the new resource.
 	 * The root element of this translation is passed in case it is needed to construct the URI. (E.g. to find 
 	 * the containing project.
 	 * 
