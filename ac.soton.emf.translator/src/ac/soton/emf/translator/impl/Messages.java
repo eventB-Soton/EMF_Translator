@@ -74,6 +74,7 @@ public class Messages extends NLS {
 				feature == null? "<null>" : feature.getName()
 				);
 	}
+	public static String TRANSLATOR_MSG_23;
 	
 	static {
 		// initialize resource bundle
