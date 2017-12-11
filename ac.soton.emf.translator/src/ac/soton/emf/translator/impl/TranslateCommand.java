@@ -74,11 +74,9 @@ public class TranslateCommand extends AbstractEMFOperation {
 	 */
 	@Override
 	protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
-		
+		IStatus status = Status.OK_STATUS;
 		try {
-			
 			ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-
 				public void run(final IProgressMonitor monitor) throws CoreException{
 					TransactionalEditingDomain editingDomain = getEditingDomain();
 					final List<Resource> modifiedResources;
@@ -110,20 +108,18 @@ public class TranslateCommand extends AbstractEMFOperation {
 							}					
 						}
 					}
-					
 				monitor.done();
 				}
 			},monitor);
-			
-			return Status.OK_STATUS;
-
 		} catch (CoreException e) {
 			e.printStackTrace();
 			Activator.logError(Messages.TRANSLATOR_MSG_19+ " : "+e.getMessage(), e);
-			return new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_19+ " : see error log", e);
+			status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_19+ " : see error log", e);
 		} finally {
 			monitor.done();
 		}
+		return status;
 	}
+
 
 }
