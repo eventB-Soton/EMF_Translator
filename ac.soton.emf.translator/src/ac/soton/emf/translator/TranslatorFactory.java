@@ -35,6 +35,7 @@ import ac.soton.emf.translator.impl.Messages;
 import ac.soton.emf.translator.impl.TranslateCommand;
 import ac.soton.emf.translator.impl.Translator;
 import ac.soton.emf.translator.impl.TranslatorConfig;
+import ac.soton.emf.translator.impl.UnTranslateCommand;
 
 
 public class TranslatorFactory {
@@ -181,6 +182,52 @@ public class TranslatorFactory {
 		         status = translateCommand.execute(monitor, null);
 			}else{
 				status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Cannot execute translation command "+translateCommand.getLabel());
+			}
+		}else{
+			monitor.subTask(Messages.TRANSLATOR_MSG_07);
+			status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, "could not create translator for  "+commandId); 
+		}
+        monitor.done();
+		return status;
+	}
+
+	/**
+	 * Un-Translate the given source element using the translator matching the given command ID
+	 * (using the EMF Command framework).
+	 * This means remove all elements in potentially affected resources that are tagged as being generated from the source element
+	 * 
+	 * If no editing domain is given, a new one will be created. 
+	 * However, in this case, the resource containing the sourceElement is not in the new editing domain
+	 * and therefore can not be changed by the translation rules (an exception will be generated) 
+	 * To avoid this, pass the editing domain associated with the resource set containing the source element's resource
+	 * i.e.. TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet())
+	 * 
+	 * 
+	 * @param editingDomain (or null to create a new one)
+	 * @param sourceElement
+	 * @param commandId
+	 * @param monitor 
+	 * @throws ExecutionException 
+	 */
+	
+	public IStatus untranslate(TransactionalEditingDomain editingDomain, EObject sourceElement, String commandId, IProgressMonitor monitor) throws ExecutionException {
+		IStatus status = null;
+		monitor.subTask(Messages.TRANSLATOR_MSG_14);
+		//try to create an appropriate translator
+		if (canTranslate(commandId, sourceElement.eClass())){
+			TranslatorConfig translatorConfig = translatorConfigRegistry.get(getTranslatorId(commandId, sourceElement.eClass()));
+			Translator translator = new Translator(translatorConfig);
+			monitor.worked(2);
+			if (editingDomain==null){
+				editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+			}	
+			final UnTranslateCommand unTranslateCommand = new UnTranslateCommand(editingDomain, sourceElement, translator);	
+			if (unTranslateCommand.canExecute()) {	
+				// run with progress
+		    	 monitor.beginTask(Messages.TRANSLATOR_MSG_05, IProgressMonitor.UNKNOWN);
+		         status = unTranslateCommand.execute(monitor, null);
+			}else{
+				status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Cannot execute un-translate command "+unTranslateCommand.getLabel());
 			}
 		}else{
 			monitor.subTask(Messages.TRANSLATOR_MSG_07);

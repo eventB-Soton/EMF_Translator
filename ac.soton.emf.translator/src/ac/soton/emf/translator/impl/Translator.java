@@ -72,7 +72,47 @@ public class Translator {
 			this.translatorConfig = translatorConfig;
 	}
 
+/**
+ * unTranslate - this should be called passing the editing domain and a source element to be un-translated
+ * @param editingDomain 
+ * @param sourceElement 
+ * @throws CoreException 
+ */
+	public List<Resource> unTranslate (TransactionalEditingDomain editingDomain, final EObject sourceElement) throws CoreException{
 	
+		List<Resource> modifiedResources = new ArrayList<Resource>();
+		try {
+			
+			//check we have a valid configuration for the translator
+			if (translatorConfig==null) {
+				throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_01(sourceElement)));
+			}
+			
+			//check we have the correct translator configuration for the source element
+			if (sourceElement.eClass() != translatorConfig.rootSourceClass){
+				throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_02(sourceElement)));
+			}
+			
+			//initialise the adapter for this translation
+			translatorConfig.adapter.initialiseAdapter(sourceElement);
+			
+			//Obtain an ID from the source element
+			sourceID = translatorConfig.adapter.getSourceId(sourceElement);
+
+			Collection<Resource> affectedResources = translatorConfig.adapter.getAffectedResources(editingDomain, sourceElement);
+			
+			//remove previously generated elements
+			Remover remover = new Remover(affectedResources, sourceID, translatorConfig.adapter);
+			modifiedResources.addAll(remover.removeTranslated());
+			
+		} catch (Exception e) {
+			throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07 ,e));
+		} 
+		
+		return modifiedResources;
+			
+	}
+
 /**
  * translate - this should be called passing the editing domain and a source element to be translated
  * @param editingDomain 
