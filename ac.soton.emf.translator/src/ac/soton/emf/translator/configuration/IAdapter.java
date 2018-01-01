@@ -10,9 +10,13 @@
  *******************************************************************************/
 package ac.soton.emf.translator.configuration;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 import ac.soton.emf.translator.TranslationDescriptor;
 
@@ -45,6 +49,20 @@ public interface IAdapter {
 	 */
 	URI getComponentURI(TranslationDescriptor translationDescriptor, EObject rootElement);
 
+	/**
+	 * This should return a collection of potentially affected resources
+	 * The resources should all be loaded in the resource set of the given editing domain.
+	 * 
+	 * 
+	 * N.B. CURRENTLY ALL RESOURCES ARE ASSUMED TO BE WITHIN THE SAME PROJECT AS THE SOURCE ELEMENT. 
+	 * (i.e. translationDescriptor.parent is ignored when adding new root level elements)
+	 * 
+	 * @param editingDomain
+	 * @param sourceElement
+	 * @return list of affected Resources
+	 */
+	Collection<Resource> getAffectedResources(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException ;
+		
 	/**
 	 * Filters out any source elements that should not be translated.
 	 * @param translatorConfig 

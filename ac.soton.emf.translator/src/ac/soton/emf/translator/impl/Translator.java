@@ -74,7 +74,7 @@ public class Translator {
 
 	
 /**
- * translate - this should be called from a command handler action, passing the selected element
+ * translate - this should be called passing the editing domain and a source element to be translated
  * @param editingDomain 
  * @param sourceElement 
  * @throws CoreException 
@@ -115,7 +115,7 @@ public class Translator {
 				}
 			}
 			
-			Collection<Resource> affectedResources = getAffectedResources(editingDomain, sourceElement);
+			Collection<Resource> affectedResources = translatorConfig.adapter.getAffectedResources(editingDomain, sourceElement);
 			
 			//remove previously generated elements
 			Remover remover = new Remover(affectedResources, sourceID, translatorConfig.adapter);
@@ -171,31 +171,7 @@ public class Translator {
 //	}
 
 	
-	/*
-	 * Load affected resources into the resourceSet of the editing domain.
-	 * If the resource already exists it will be loaded, if not created
-	 * 
-	 * 
-	 * N.B. CURRENTLY ALL RESOURCES ARE ASSUMED TO BE WITHIN THE SAME PROJECT AS THE SOURCE ELEMENT. 
-	 * (i.e. translationDescriptor.parent is ignored when adding new root level elements)
-	 * 
-	 * @param editingDomain
-	 * @param sourceElement
-	 * @return list of affected Resources
-	 */
-		private Collection<Resource> getAffectedResources(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException {
-			List<Resource> affectedResources = new ArrayList<Resource>();
-			for (TranslationDescriptor translationDescriptor : translatedElements){
-				URI fileUri = translatorConfig.adapter.getComponentURI(translationDescriptor, sourceElement);
-				if (fileUri!=null){					
-					Resource resource = editingDomain.getResourceSet().getResource(fileUri, false);
-					if (resource == null) 
-						resource = editingDomain.createResource(fileUri.toString());
-					if (!affectedResources.contains(resource)) affectedResources.add(resource);
-				}
-			}
-			return affectedResources;
-		}
+
 		
 /*
  * If any translated elements are a new root level element, this attaches the new element as the content of the resource.
