@@ -11,10 +11,13 @@
 package ac.soton.emf.translator.handler;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -84,6 +87,7 @@ public class TranslateHandler extends AbstractHandler {
 									status = factory.translate(editingDomain, sourceElement, commandId, submonitor.newChild(2));
 									submonitor.setTaskName("postProcessing");
 									postProcessing(sourceElement, commandId, submonitor.newChild(1));
+									save(editingDomain, submonitor.newChild(1));
 								}
 							} catch (Exception e) {
 								throw new InvocationTargetException(e);
@@ -91,15 +95,13 @@ public class TranslateHandler extends AbstractHandler {
 						}
 					});
 				}
-		}catch (InvocationTargetException e) {
-	    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
-			Activator.logError(Messages.TRANSLATOR_MSG_07, e);
 		} catch (InterruptedException e) {
 	    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
 			Activator.logError(Messages.TRANSLATOR_MSG_08, e);
-		} catch (CoreException e) {
+		}catch (Exception e) {
+			e.printStackTrace();
+	    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
 			Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-			MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
 		}finally{
 			if (status != null && !status.isOK()){
 				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
@@ -169,6 +171,45 @@ public class TranslateHandler extends AbstractHandler {
 	 */
 	protected void postProcessing(EObject sourceElement, String commandId, IProgressMonitor monitor) throws Exception {
         monitor.done();
+	}
+	
+	/**
+	 * save is batched within a workspace runnable
+	 */
+	private void save(final TransactionalEditingDomain editingDomain, IProgressMonitor monitor) throws Exception {
+		ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+			public void run(final IProgressMonitor monitor) throws CoreException{
+				try{
+					doSave(editingDomain, monitor);
+				}catch (Exception e) {
+					//throw this as a CoreException
+					new Exception(e);
+				}
+				monitor.done();
+			}
+		},monitor);
+		monitor.done();
+	}
+	
+	/**
+	 * Save modified resources
+	 * This can be overridden to use particular persistence mechanisms
+	 * 
+	 * The default implementation saves all modified
+	 * resources in the resource set of the editing domain
+	 * 
+	 * @param editingDomain
+	 * @param monitor
+	 * @throws Exception 
+	 */
+	protected void doSave(final TransactionalEditingDomain editingDomain, IProgressMonitor monitor) throws Exception {
+		//try to save all the modified resources
+		for (Resource resource : editingDomain.getResourceSet().getResources()){
+			if (resource.isModified()){
+				resource.save(Collections.emptyMap());
+				monitor.worked(1);
+			}
+		}
 	}
 	
 }

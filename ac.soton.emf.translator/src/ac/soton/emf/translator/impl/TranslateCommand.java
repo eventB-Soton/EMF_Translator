@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
+ *  Copyright (c) 2015-2017 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -10,13 +10,9 @@
  *******************************************************************************/
 package ac.soton.emf.translator.impl;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.core.resources.IWorkspaceRunnable;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -76,41 +72,25 @@ public class TranslateCommand extends AbstractEMFOperation {
 	protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
 		IStatus status = Status.OK_STATUS;
 		try {
-			ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-				public void run(final IProgressMonitor monitor) throws CoreException{
-					TransactionalEditingDomain editingDomain = getEditingDomain();
-					final List<Resource> modifiedResources;
-					
-					monitor.beginTask(Messages.TRANSLATOR_MSG_13(element.eClass().getName()),10);							
-					monitor.worked(1);
-					
-			        monitor.subTask(Messages.TRANSLATOR_MSG_15);	
-			        modifiedResources = translator.translate(editingDomain, element);
-			        
-					monitor.worked(4);
-					if (modifiedResources == null){
-						monitor.subTask(Messages.TRANSLATOR_MSG_07);
-					}else{
-						//try to save all the modified resources
-				        monitor.subTask(Messages.TRANSLATOR_MSG_16);
-				        List<Resource> saved = new ArrayList<Resource>();
-						for (Resource resource : modifiedResources){
-							try {
-								if (!saved.contains(resource)){
-									resource.save(Collections.emptyMap());
-									saved.add(resource);
-								}
-								monitor.worked(1);
-							} catch (IOException e) {
-								//throw this as a CoreException
-								new CoreException(
-										new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_18(resource), e));
-							}					
-						}
-					}
-				monitor.done();
+			TransactionalEditingDomain editingDomain = getEditingDomain();
+			final List<Resource> modifiedResources;
+			
+			monitor.beginTask(Messages.TRANSLATOR_MSG_13(element.eClass().getName()),10);							
+			monitor.worked(1);
+			
+	        monitor.subTask(Messages.TRANSLATOR_MSG_15);	
+	        modifiedResources = translator.translate(editingDomain, element);
+	        
+			monitor.worked(4);
+			if (modifiedResources == null){
+				monitor.subTask(Messages.TRANSLATOR_MSG_07);
+			}else{ 
+				//set modified attribute for modified resources to indicate they need to be saved
+				for (Resource resource : modifiedResources){
+					resource.setModified(true);	
+					monitor.worked(2);
 				}
-			},monitor);
+			}
 		} catch (CoreException e) {
 			e.printStackTrace();
 			Activator.logError(Messages.TRANSLATOR_MSG_19+ " : "+e.getMessage(), e);
@@ -120,6 +100,5 @@ public class TranslateCommand extends AbstractEMFOperation {
 		}
 		return status;
 	}
-
 
 }
