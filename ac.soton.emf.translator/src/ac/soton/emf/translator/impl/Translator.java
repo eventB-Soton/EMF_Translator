@@ -25,6 +25,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
@@ -273,51 +274,60 @@ public class Translator {
 					if (!translationDescriptor.remove && !translatorConfig.adapter.outputFilter(translationDescriptor)){
 						continue;								
 					}
-					Resource resource = null;
-					Object value = translationDescriptor.value;
-					if (translationDescriptor.parent != null && 
-						translationDescriptor.parent.eClass().getEAllStructuralFeatures().contains(translationDescriptor.feature) &&
-						translationDescriptor.feature.getEType().isInstance(value)){
-						
-						Object featureValue = translationDescriptor.parent.eGet(translationDescriptor.feature);
-	
-						if (featureValue instanceof EList){	
-							if(translationDescriptor.remove == false){											
-								translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
-								translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
-								
-								int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
 
-								((EList)featureValue).add(pos, translationDescriptor.value);
-										
+					Object value = translationDescriptor.value;
+					if (translationDescriptor.parent != null){
+						if (translationDescriptor.parent.eIsProxy()){
+							translationDescriptor.parent = EcoreUtil.resolve(translationDescriptor.parent,editingDomain.getResourceSet());
+							if (translationDescriptor.parent.eIsProxy()){
+								throw new Exception("cannot resolve "+translationDescriptor.parent);
 							}
-							else{
-								ArrayList<Object> toRemove = new ArrayList<Object>();
-								for(Object obj : (EList)featureValue){
-									if(translatorConfig.adapter.match(obj, translationDescriptor.value))
-										toRemove.add(obj);
-								}
-								((EList)featureValue).removeAll(toRemove);
-							}
-						}else {
-							if(translationDescriptor.remove == false){
-								//FIXME: this should be analysed more
-								translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.value);
-							}
-							else
-								if  (translationDescriptor.feature.isUnsettable())
-									translationDescriptor.parent.eUnset(translationDescriptor.feature);
-								else
-									translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.feature.getDefaultValue());
 						}
-						
-						//add to list of modifiedResources if not already there
-						resource = translationDescriptor.parent.eResource();
-					}else{
-						//Error messages are translated elsewhere - should not get here.
-					}
-					if (resource!= null && !modifiedResources.contains(resource)){
-						modifiedResources.add(resource);
+						Resource resource = translationDescriptor.parent.eResource();
+						if (resource==null){
+							throw new Exception("element not in a resource "+translationDescriptor.parent);
+						}
+						if (translationDescriptor.parent.eClass().getEAllStructuralFeatures().contains(translationDescriptor.feature) &&
+							translationDescriptor.feature.getEType().isInstance(value)){
+							
+							Object featureValue = translationDescriptor.parent.eGet(translationDescriptor.feature);
+		
+							if (featureValue instanceof EList){	
+								if(translationDescriptor.remove == false){											
+									translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
+									translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
+									
+									int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
+	
+									((EList)featureValue).add(pos, translationDescriptor.value);
+											
+								}
+								else{
+									ArrayList<Object> toRemove = new ArrayList<Object>();
+									for(Object obj : (EList)featureValue){
+										if(translatorConfig.adapter.match(obj, translationDescriptor.value))
+											toRemove.add(obj);
+									}
+									((EList)featureValue).removeAll(toRemove);
+								}
+							}else {
+								if(translationDescriptor.remove == false){
+									//FIXME: this should be analysed more
+									translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.value);
+								}
+								else
+									if  (translationDescriptor.feature.isUnsettable())
+										translationDescriptor.parent.eUnset(translationDescriptor.feature);
+									else
+										translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.feature.getDefaultValue());
+							}
+							//add to list of modifiedResources if not already there
+							if (!modifiedResources.contains(resource)){
+								modifiedResources.add(resource);
+							}
+						}else{
+							//Error messages are translated elsewhere - should not get here.
+						}
 					}
 				}
 			}
