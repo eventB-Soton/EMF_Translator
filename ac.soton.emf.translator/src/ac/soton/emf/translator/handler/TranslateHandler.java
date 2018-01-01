@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
+ *  Copyright (c) 2015-2017 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -78,7 +79,9 @@ public class TranslateHandler extends AbstractHandler {
 									submonitor.setTaskName("preprocessing");
 									preProcessing(sourceElement, commandId, submonitor.newChild(1));
 									submonitor.setTaskName("translating");
-									status = factory.translate(sourceElement, commandId, submonitor.newChild(2));
+									final TransactionalEditingDomain editingDomain = 
+											TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet());
+									status = factory.translate(editingDomain, sourceElement, commandId, submonitor.newChild(2));
 									submonitor.setTaskName("postProcessing");
 									postProcessing(sourceElement, commandId, submonitor.newChild(1));
 								}

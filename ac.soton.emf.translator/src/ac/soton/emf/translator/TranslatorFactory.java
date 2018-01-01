@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
+ *  Copyright (c) 2015-2017 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -75,9 +75,8 @@ public class TranslatorFactory {
 				String translatorID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_TRANSLATORID);
 				String commandID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_COMMANDID);
 				final IAdapter adapter = (IAdapter) translatorExtensionElement.createExecutableExtension(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ADAPTERCLASS);
-				String selfModifying = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_SELFMODIFYING);
 				if (rootSourcePackage!= null) {
-					TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter, selfModifying);
+					TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter);
 					
 					for (final IExtension rulesetExtension : Platform.getExtensionRegistry().getExtensionPoint(Identifiers.EXTPT_RULESETS_EXTPTID).getExtensions()) {				
 						for (final IConfigurationElement rulesetExtensionElement : rulesetExtension.getConfigurationElements()) {
@@ -151,12 +150,20 @@ public class TranslatorFactory {
 	 * Translate the given source element using the translator matching the given command ID
 	 * (using the EMF Command framework)
 	 * 
+	 * If no editing domain is given, a new one will be created. 
+	 * However, in this case, the resource containing the sourceElement is not in the new editing domain
+	 * and therefore can not be changed by the translation rules (an exception will be generated) 
+	 * To avoid this, pass the editing domain associated with the resource set containing the source element's resource
+	 * i.e.. TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet())
+	 * 
+	 * 
+	 * @param editingDomain (or null to create a new one)
 	 * @param sourceElement
 	 * @param commandId
 	 * @param monitor 
 	 * @throws ExecutionException 
 	 */
-	public IStatus translate(EObject sourceElement, String commandId, IProgressMonitor monitor) throws ExecutionException {
+	public IStatus translate(TransactionalEditingDomain editingDomain, EObject sourceElement, String commandId, IProgressMonitor monitor) throws ExecutionException {
 		IStatus status = null;
 		monitor.subTask(Messages.TRANSLATOR_MSG_14);
 		//try to create an appropriate translator
@@ -164,10 +171,7 @@ public class TranslatorFactory {
 			TranslatorConfig translatorConfig = translatorConfigRegistry.get(getTranslatorId(commandId, sourceElement.eClass()));
 			Translator translator = new Translator(translatorConfig);
 			monitor.worked(2);
-			TransactionalEditingDomain editingDomain = null;
-			if (translatorConfig.selfModifying){
-				editingDomain = TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet());
-			}else{
+			if (editingDomain==null){
 				editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 			}
 			final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement, translator);	

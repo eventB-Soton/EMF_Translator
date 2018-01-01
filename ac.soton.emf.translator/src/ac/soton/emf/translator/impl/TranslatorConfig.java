@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
+ *  Copyright (c) 2015-2017 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -27,14 +27,12 @@ public class TranslatorConfig{
 	public EClassifier rootSourceClass;
 	public Map<EClassifier, List<IRule>> ruleMapping;
 	public IAdapter adapter;
-	public boolean selfModifying;
 	
-	public TranslatorConfig(String translatorID, EPackage rootSourcePackage, EClassifier rootSourceClass, IAdapter adapter, String selfModifying){
+	public TranslatorConfig(String translatorID, EPackage rootSourcePackage, EClassifier rootSourceClass, IAdapter adapter){
 		this.translatorID = translatorID;
 		this.rootSourcePackage = rootSourcePackage;
 		this.rootSourceClass = rootSourceClass;
 		this.adapter = adapter;
-		this.selfModifying = Boolean.valueOf(selfModifying);
 		ruleMapping = new HashMap<EClassifier, List<IRule>>();
 	}
 	
