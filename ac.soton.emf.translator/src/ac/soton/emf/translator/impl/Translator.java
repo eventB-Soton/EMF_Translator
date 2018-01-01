@@ -235,7 +235,9 @@ public class Translator {
 					translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
 					//translatorConfig.adapter.setPriority(0, translationDescriptor.value);
 					Resource resource = editingDomain.getResourceSet().getResource(fileUri, false);
-					//Resource newResource = editingDomain.createResource(fileUri.toString());
+					if (resource==null){
+						resource = editingDomain.createResource(fileUri.toString());
+					}
 					resource.getContents().add((EObject)translationDescriptor.value);
 					if (!modifiedResources.contains(resource)) modifiedResources.add(resource);		
 				}
