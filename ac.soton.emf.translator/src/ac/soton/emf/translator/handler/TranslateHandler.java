@@ -20,6 +20,7 @@ import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -174,24 +175,6 @@ public class TranslateHandler extends AbstractHandler {
 	}
 	
 	/**
-	 * save is batched within a workspace runnable
-	 */
-	private void save(final TransactionalEditingDomain editingDomain, IProgressMonitor monitor) throws Exception {
-		ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-			public void run(final IProgressMonitor monitor) throws CoreException{
-				try{
-					doSave(editingDomain, monitor);
-				}catch (Exception e) {
-					//throw this as a CoreException
-					new Exception(e);
-				}
-				monitor.done();
-			}
-		},monitor);
-		monitor.done();
-	}
-	
-	/**
 	 * Save modified resources
 	 * This can be overridden to use particular persistence mechanisms
 	 * 
@@ -202,14 +185,26 @@ public class TranslateHandler extends AbstractHandler {
 	 * @param monitor
 	 * @throws Exception 
 	 */
-	protected void doSave(final TransactionalEditingDomain editingDomain, IProgressMonitor monitor) throws Exception {
-		//try to save all the modified resources
-		for (Resource resource : editingDomain.getResourceSet().getResources()){
-			if (resource.isModified()){
-				resource.save(Collections.emptyMap());
-				monitor.worked(1);
+	protected void save(final TransactionalEditingDomain editingDomain, IProgressMonitor monitor) throws Exception {
+		ResourcesPlugin.getWorkspace().run(new ICoreRunnable() {
+			public void run(final IProgressMonitor monitor) throws CoreException{
+				try{
+					//try to save all the modified resources
+					for (Resource resource : editingDomain.getResourceSet().getResources()){
+						if (resource.isModified()){
+							resource.save(Collections.emptyMap());
+							monitor.worked(1);
+						}
+					}
+				}catch (Exception e) {
+					//throw this as a CoreException
+					new Exception(e);
+				}
+				monitor.done();
 			}
-		}
+		},monitor);
+		monitor.done();
 	}
+	
 	
 }
