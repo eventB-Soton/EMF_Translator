@@ -10,9 +10,9 @@
  *******************************************************************************/
 package ac.soton.emf.translator;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.eclipse.core.commands.ExecutionException;
@@ -43,23 +43,19 @@ public class TranslatorFactory {
 	// The shared instance
 	private static TranslatorFactory factory = null;
 	
-	//cached store of translator configurations that have been loaded from extension points
-	private Map<String,TranslatorConfig> translatorConfigRegistry = new HashMap<String, TranslatorConfig  >();
-	
 	//map of the translators available for each command
-	private Map<String,List<String> > translatorsForCommand = new HashMap<String, List<String>>();
+	private Map<String,Collection<TranslatorConfig> > translatorsForCommand = new HashMap<String, Collection<TranslatorConfig>>();
 	
 	/*
-	 * get the translator Id for the given command and root source class
-	 * or null if none
+	 * get the translator Id for the given command and root source class or null if none
 	 */
-	private String getTranslatorId(String commandId, EClassifier rootSourceClass) {
-		List<String> translatorIds = translatorsForCommand.get(commandId);
-		if (translatorIds== null) return null;
-		for (String t : translatorIds){
-			if (translatorConfigRegistry.get(t).rootSourceClass.equals(rootSourceClass)) return t;
+	private TranslatorConfig getTranslatorConfig(String commandId, EClassifier rootSourceClass) {
+		Collection<TranslatorConfig> translators = translatorsForCommand.get(commandId);
+		if (translators== null) return null;
+		for (TranslatorConfig translatorConfig : translators){
+			if (translatorConfig.rootSourceClass.equals(rootSourceClass)) return translatorConfig;
 		}
-		return null;
+		return null;		
 	}
 	
 	/*
@@ -75,49 +71,53 @@ public class TranslatorFactory {
 				EClassifier rootSourceClass = rootSourcePackage.getEClassifier(translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ROOTSOURCECLASS));
 				String translatorID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_TRANSLATORID);
 				String commandID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_COMMANDID);
-				final IAdapter adapter = (IAdapter) translatorExtensionElement.createExecutableExtension(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ADAPTERCLASS);
-				if (rootSourcePackage!= null) {
-					TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter);
-					
-					for (final IExtension rulesetExtension : Platform.getExtensionRegistry().getExtensionPoint(Identifiers.EXTPT_RULESETS_EXTPTID).getExtensions()) {				
-						for (final IConfigurationElement rulesetExtensionElement : rulesetExtension.getConfigurationElements()) {
-							if (translatorID.equals(rulesetExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_TRANSLATORID))){
-								for (final IConfigurationElement ruleExtensionElement : rulesetExtensionElement.getChildren(Identifiers.EXTPT_RULESETS_RULESET_RULE)) {
-									
-									//see whether a source EPackage has been explicitly defined for this rule
-									EPackage sourcePackage = EPackage.Registry.INSTANCE.getEPackage(ruleExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_RULE_SOURCEPACKAGE));
-									if (sourcePackage == null) {
-										//no explicit EPackage so use the rootSourcePackage of the translator
-										sourcePackage = rootSourcePackage;
-									}
-
-									//find the source EClass in the source EPackage
-									EClassifier sourceClass = sourcePackage.getEClassifier(ruleExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_RULE_SOURCECLASS));
-									//if not in the rootPackage, try its subPackages
-									if(sourceClass == null){
-										for (EPackage subPackage  : sourcePackage.getESubpackages()){
-											sourceClass = subPackage.getEClassifier(ruleExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_RULE_SOURCECLASS));
-											if (sourceClass != null) break;
+				if (getTranslatorConfig(commandID, rootSourceClass)==null){
+					final IAdapter adapter = (IAdapter) translatorExtensionElement.createExecutableExtension(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ADAPTERCLASS);
+					if (rootSourcePackage!= null) {
+						TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter);
+						
+						for (final IExtension rulesetExtension : Platform.getExtensionRegistry().getExtensionPoint(Identifiers.EXTPT_RULESETS_EXTPTID).getExtensions()) {				
+							for (final IConfigurationElement rulesetExtensionElement : rulesetExtension.getConfigurationElements()) {
+								if (translatorID.equals(rulesetExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_TRANSLATORID))){
+									for (final IConfigurationElement ruleExtensionElement : rulesetExtensionElement.getChildren(Identifiers.EXTPT_RULESETS_RULESET_RULE)) {
+										
+										//see whether a source EPackage has been explicitly defined for this rule
+										EPackage sourcePackage = EPackage.Registry.INSTANCE.getEPackage(ruleExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_RULE_SOURCEPACKAGE));
+										if (sourcePackage == null) {
+											//no explicit EPackage so use the rootSourcePackage of the translator
+											sourcePackage = rootSourcePackage;
 										}
-									}
-								
-									// if we found the class, add the rule
-									if (sourceClass != null) {
-										final IRule rule = (IRule) ruleExtensionElement.createExecutableExtension(Identifiers.EXTPT_RULESETS_RULESET_RULE_RULECLASS);									
-										translatorConfig.addRule(sourceClass, rule);
+	
+										//find the source EClass in the source EPackage
+										EClassifier sourceClass = sourcePackage.getEClassifier(ruleExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_RULE_SOURCECLASS));
+										//if not in the rootPackage, try its subPackages
+										if(sourceClass == null){
+											for (EPackage subPackage  : sourcePackage.getESubpackages()){
+												sourceClass = subPackage.getEClassifier(ruleExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_RULE_SOURCECLASS));
+												if (sourceClass != null) break;
+											}
+										}
+									
+										// if we found the class, add the rule
+										if (sourceClass != null) {
+											final IRule rule = (IRule) ruleExtensionElement.createExecutableExtension(Identifiers.EXTPT_RULESETS_RULESET_RULE_RULECLASS);									
+											translatorConfig.addRule(sourceClass, rule);
+										}
 									}
 								}
 							}
 						}
+						//save config data for this translator
+						if (translatorConfig != null) {
+							Collection<TranslatorConfig> translators = translatorsForCommand.get(commandID);
+							if (translators == null) translators = new HashSet<TranslatorConfig>();
+							translators.add(translatorConfig);
+							translatorsForCommand.put(commandID, translators);
+						}
 					}
-					//save config data for this translator
-					if (translatorConfig != null) {
-						translatorConfigRegistry.put(translatorID,translatorConfig);
-						List<String> translatorIds = translatorsForCommand.get(commandID);
-						if (translatorIds == null) translatorIds = new ArrayList<String>();
-						translatorIds.add(translatorID);
-						translatorsForCommand.put(commandID, translatorIds);
-					}
+				}else{	//two translators with the same command id and root source class are not allowed
+					String errorMessage = "Conflicting translators for Command id: "+commandID+" , source class:"+rootSourceClass.getName()+" ; ignoring "+ translatorID;
+					Activator.logError(errorMessage);
 				}
 			}
 		}
@@ -143,7 +143,7 @@ public class TranslatorFactory {
 	 * @return
 	 */
 	public boolean canTranslate(String commandId, EClassifier rootSourceClass){
-		return getTranslatorId(commandId, rootSourceClass) != null;
+		return getTranslatorConfig(commandId, rootSourceClass) != null;
 	}
 
 	
@@ -169,7 +169,7 @@ public class TranslatorFactory {
 		monitor.subTask(Messages.TRANSLATOR_MSG_14);
 		//try to create an appropriate translator
 		if (canTranslate(commandId, sourceElement.eClass())){
-			TranslatorConfig translatorConfig = translatorConfigRegistry.get(getTranslatorId(commandId, sourceElement.eClass()));
+			TranslatorConfig translatorConfig = getTranslatorConfig(commandId, sourceElement.eClass());
 			Translator translator = new Translator(translatorConfig);
 			monitor.worked(2);
 			if (editingDomain==null){
@@ -215,7 +215,7 @@ public class TranslatorFactory {
 		monitor.subTask(Messages.TRANSLATOR_MSG_14);
 		//try to create an appropriate translator
 		if (canTranslate(commandId, sourceElement.eClass())){
-			TranslatorConfig translatorConfig = translatorConfigRegistry.get(getTranslatorId(commandId, sourceElement.eClass()));
+			TranslatorConfig translatorConfig = getTranslatorConfig(commandId, sourceElement.eClass());
 			Translator translator = new Translator(translatorConfig);
 			monitor.worked(2);
 			if (editingDomain==null){
