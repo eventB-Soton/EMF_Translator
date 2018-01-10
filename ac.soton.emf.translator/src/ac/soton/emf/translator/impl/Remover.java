@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
+ *  Copyright (c) 2015-2017 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -47,7 +47,7 @@ public class Remover {
 		modifiedResources = new ArrayList<Resource>();
 		if (canExecute()){
 			for (Resource res : resources){
-				if (!res.getContents().isEmpty()) {
+				if (res!=null && !res.getContents().isEmpty()) {
 					EObject component = res.getContents().get(0);
 					if (component instanceof EObject){
 						List<EObject> previouslyTranslatedElements = getPreviouslyTranslatedElements(component);
@@ -71,7 +71,6 @@ public class Remover {
 	 */
 	private ArrayList<EObject> getPreviouslyTranslatedElements(final EObject root) {
 		List<EObject> contents = Find.eAllContents(root, EcorePackage.Literals.EOBJECT);
-				//component.getAllContained(CorePackage.eINSTANCE.getEventBElement(),false);
 		contents.remove(null);
 		contents.add(0,root);
 		ArrayList<EObject> remove = new ArrayList<EObject>();
@@ -87,20 +86,7 @@ public class Remover {
 					}
 				}
 			}
-//			if(eObject instanceof Machine){
-//				for(Context ctx : ((Machine)eObject).getSees()){
-////					if(!ctx.getName().equals(((Machine)eObject).getName() + "_implicitContext"))	
-////						continue;
-//					for(EObject ieObject : ctx.eContents()){
-//						if(adapter.isAnnotatedWith(ieObject, sourceID)){
-//							remove.add(ieObject);
-//							if(!modifiedResources.contains(ctx.eResource())){
-//								modifiedResources.add(ctx.eResource());
-//							}
-//						}
-//					}
-//				}
-//			}
+
 			if (adapter.isAnnotatedWith(eObject,sourceID)){
 				remove.add(eObject);
 				if(!modifiedResources.contains(root.eResource())){
