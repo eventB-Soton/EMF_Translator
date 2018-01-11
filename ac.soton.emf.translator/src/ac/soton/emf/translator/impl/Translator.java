@@ -25,6 +25,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
@@ -72,9 +73,49 @@ public class Translator {
 			this.translatorConfig = translatorConfig;
 	}
 
-	
 /**
- * translate - this should be called from a command handler action, passing the selected element
+ * unTranslate - this should be called passing the editing domain and a source element to be un-translated
+ * @param editingDomain 
+ * @param sourceElement 
+ * @throws CoreException 
+ */
+	public List<Resource> unTranslate (TransactionalEditingDomain editingDomain, final EObject sourceElement) throws CoreException{
+	
+		List<Resource> modifiedResources = new ArrayList<Resource>();
+		try {
+			
+			//check we have a valid configuration for the translator
+			if (translatorConfig==null) {
+				throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_01(sourceElement)));
+			}
+			
+			//check we have the correct translator configuration for the source element
+			if (sourceElement.eClass() != translatorConfig.rootSourceClass){
+				throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_02(sourceElement)));
+			}
+			
+			//initialise the adapter for this translation
+			translatorConfig.adapter.initialiseAdapter(sourceElement);
+			
+			//Obtain an ID from the source element
+			sourceID = translatorConfig.adapter.getSourceId(sourceElement);
+
+			Collection<Resource> affectedResources = translatorConfig.adapter.getAffectedResources(editingDomain, sourceElement);
+			
+			//remove previously generated elements
+			Remover remover = new Remover(affectedResources, sourceID, translatorConfig.adapter);
+			modifiedResources.addAll(remover.removeTranslated());
+			
+		} catch (Exception e) {
+			throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07 ,e));
+		} 
+		
+		return modifiedResources;
+			
+	}
+
+/**
+ * translate - this should be called passing the editing domain and a source element to be translated
  * @param editingDomain 
  * @param sourceElement 
  * @throws CoreException 
@@ -114,19 +155,15 @@ public class Translator {
 					throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_22(translationDescriptor.parent, translationDescriptor.feature)));
 				}
 			}
-
-//			DeleteGeneratedCommand deleteGeneratedCommand = new DeleteGeneratedCommand(editingDomain, sourceElement);
-//			if (deleteGeneratedCommand.canExecute()){
-//				deleteGeneratedCommand.execute(null, null);
-//			}else{
-//				Activator.logError(Messages.TRANSLATOR_MSG_03);
-//				return null;
-//			}
-			Remover remover = new Remover(modifiedResources, sourceID, translatorConfig.adapter);
+			
+			Collection<Resource> affectedResources = translatorConfig.adapter.getAffectedResources(editingDomain, sourceElement);
+			
+			//remove previously generated elements
+			Remover remover = new Remover(affectedResources, sourceID, translatorConfig.adapter);
 			modifiedResources.addAll(remover.removeTranslated());
 			
-			//create new EventB components
-			modifiedResources.addAll(createNewComponents(editingDomain, sourceElement));
+			//add new roots to resources
+			modifiedResources.addAll(placeRootElements(editingDomain, sourceElement));
 			
 		} catch (Exception e) {
 			throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07 ,e));
@@ -143,14 +180,12 @@ public class Translator {
 		} catch (Exception e) {
 			throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_04, e));
 		}
-		
-		//modifiedResources.add(sourceElement.eContainer().eResource()); // NOT FOR IMPORT
-		
+				
 		return modifiedResources;	
 	}
 	
 //	/**
-//	 * Removes Event-B components according to the descriptors
+//	 * Removes components according to the descriptors
 //	 * 
 //	 * 
 //	 * @param editingDomain
@@ -176,32 +211,40 @@ public class Translator {
 //		}
 //	}
 
+	
+
+		
 /*
- * If any translated elements are a new Resource component (e.g. machine, context) this creates a new resource
- * for them in the editing domains resource set and attaches the new element as the content of the resource.
+ * If any translated elements are a new root level element, this attaches the new element as the content of the resource.
+ * The resource should already be loaded in the editing domains resource set from previous.
  * Note that we do not save the resource yet in case the translation process does not complete. 
  * 
  * N.B. CURRENTLY ALL RESOURCES ARE ASSUMED TO BE WITHIN THE SAME PROJECT AS THE SOURCE ELEMENT. 
- * (I.E. CURRENTLY WE DO NOT USE translationDecriptor.parent WHICH CAN BE LEFT NULL)
+ * (i.e. translationDescriptor.parent is ignored when adding new root level elements)
  * 
  * @param editingDomain
  * @param sourceElement
- * @return list of new Resources
+ * @return list of affected Resources
  */
-	private Collection<? extends Resource> createNewComponents(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException {
-		List<Resource> newResources = new ArrayList<Resource>();
+	private Collection<? extends Resource> placeRootElements(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException {
+		List<Resource> modifiedResources = new ArrayList<Resource>();
 
 		for (TranslationDescriptor translationDescriptor : translatedElements){
-			URI fileUri = translatorConfig.adapter.getComponentURI(translationDescriptor, sourceElement);
-			if (fileUri!=null){
-				translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
-				//translatorConfig.adapter.setPriority(0, translationDescriptor.value);
-				Resource newResource = editingDomain.createResource(fileUri.toString());
-				newResource.getContents().add((EObject)translationDescriptor.value);
-				newResources.add(newResource);		
+			if (translatorConfig.adapter.isRoot(translationDescriptor)){
+				URI fileUri = translatorConfig.adapter.getComponentURI(translationDescriptor, sourceElement);
+				if (fileUri!=null){
+					translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
+					//translatorConfig.adapter.setPriority(0, translationDescriptor.value);
+					Resource resource = editingDomain.getResourceSet().getResource(fileUri, false);
+					if (resource==null){
+						resource = editingDomain.createResource(fileUri.toString());
+					}
+					resource.getContents().add((EObject)translationDescriptor.value);
+					if (!modifiedResources.contains(resource)) modifiedResources.add(resource);		
+				}
 			}
 		}
-		return newResources;
+		return modifiedResources;
 	}
 
 		
@@ -231,51 +274,60 @@ public class Translator {
 					if (!translationDescriptor.remove && !translatorConfig.adapter.outputFilter(translationDescriptor)){
 						continue;								
 					}
-					Resource resource = null;
-					Object value = translationDescriptor.value;
-					if (translationDescriptor.parent != null && 
-						translationDescriptor.parent.eClass().getEAllStructuralFeatures().contains(translationDescriptor.feature) &&
-						translationDescriptor.feature.getEType().isInstance(value)){
-						
-						Object featureValue = translationDescriptor.parent.eGet(translationDescriptor.feature);
-	
-						if (featureValue instanceof EList){	
-							if(translationDescriptor.remove == false){											
-								translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
-								translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
-								
-								int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
 
-								((EList)featureValue).add(pos, translationDescriptor.value);
-										
+					Object value = translationDescriptor.value;
+					if (translationDescriptor.parent != null){
+						if (translationDescriptor.parent.eIsProxy()){
+							translationDescriptor.parent = EcoreUtil.resolve(translationDescriptor.parent,editingDomain.getResourceSet());
+							if (translationDescriptor.parent.eIsProxy()){
+								throw new Exception("cannot resolve "+translationDescriptor.parent);
 							}
-							else{
-								ArrayList<Object> toRemove = new ArrayList<Object>();
-								for(Object obj : (EList)featureValue){
-									if(translatorConfig.adapter.match(obj, translationDescriptor.value))
-										toRemove.add(obj);
-								}
-								((EList)featureValue).removeAll(toRemove);
-							}
-						}else {
-							if(translationDescriptor.remove == false){
-								//FIXME: this should be analysed more
-								translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.value);
-							}
-							else
-								if  (translationDescriptor.feature.isUnsettable())
-									translationDescriptor.parent.eUnset(translationDescriptor.feature);
-								else
-									translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.feature.getDefaultValue());
 						}
-						
-						//add to list of modifiedResources if not already there
-						resource = translationDescriptor.parent.eResource();
-					}else{
-						//Error messages are translated elsewhere - should not get here.
-					}
-					if (resource!= null && !modifiedResources.contains(resource)){
-						modifiedResources.add(resource);
+						Resource resource = translationDescriptor.parent.eResource();
+						if (resource==null){
+							throw new Exception("element not in a resource "+translationDescriptor.parent);
+						}
+						if (translationDescriptor.parent.eClass().getEAllStructuralFeatures().contains(translationDescriptor.feature) &&
+							translationDescriptor.feature.getEType().isInstance(value)){
+							
+							Object featureValue = translationDescriptor.parent.eGet(translationDescriptor.feature);
+		
+							if (featureValue instanceof EList){	
+								if(translationDescriptor.remove == false){											
+									translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
+									translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
+									
+									int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
+	
+									((EList)featureValue).add(pos, translationDescriptor.value);
+											
+								}
+								else{
+									ArrayList<Object> toRemove = new ArrayList<Object>();
+									for(Object obj : (EList)featureValue){
+										if(translatorConfig.adapter.match(obj, translationDescriptor.value))
+											toRemove.add(obj);
+									}
+									((EList)featureValue).removeAll(toRemove);
+								}
+							}else {
+								if(translationDescriptor.remove == false){
+									//FIXME: this should be analysed more
+									translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.value);
+								}
+								else
+									if  (translationDescriptor.feature.isUnsettable())
+										translationDescriptor.parent.eUnset(translationDescriptor.feature);
+									else
+										translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.feature.getDefaultValue());
+							}
+							//add to list of modifiedResources if not already there
+							if (!modifiedResources.contains(resource)){
+								modifiedResources.add(resource);
+							}
+						}else{
+							//Error messages are translated elsewhere - should not get here.
+						}
 					}
 				}
 			}
@@ -388,7 +440,6 @@ public class Translator {
 		for (final EObject child : sourceElement.eContents()) {
 				traverseModel(child);
 		}
-	}
-	
+	}	
 
 }

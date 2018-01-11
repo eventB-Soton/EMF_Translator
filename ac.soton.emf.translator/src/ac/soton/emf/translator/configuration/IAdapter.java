@@ -10,9 +10,13 @@
  *******************************************************************************/
 package ac.soton.emf.translator.configuration;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 import ac.soton.emf.translator.TranslationDescriptor;
 
@@ -27,8 +31,15 @@ public interface IAdapter {
 	void initialiseAdapter(Object sourceElement);
 	
 	/**
-	 * if the translation descriptor describes or requires the translation of a new resource level component,
-	 * this should return the resource URI to be used in creating the new resource.
+	 * returns true if the translation descriptor describes a new root level element
+	 * @param translationDescriptor
+	 * @return
+	 */
+	boolean isRoot(TranslationDescriptor translationDescriptor);
+	
+	/**
+	 * 
+	 * This should return the resource URI to be used in creating the new resource.
 	 * The root element of this translation is passed in case it is needed to construct the URI. (E.g. to find 
 	 * the containing project.
 	 * 
@@ -38,6 +49,20 @@ public interface IAdapter {
 	 */
 	URI getComponentURI(TranslationDescriptor translationDescriptor, EObject rootElement);
 
+	/**
+	 * This should return a collection of potentially affected resources
+	 * The resources should all be loaded in the resource set of the given editing domain.
+	 * 
+	 * 
+	 * N.B. CURRENTLY ALL RESOURCES ARE ASSUMED TO BE WITHIN THE SAME PROJECT AS THE SOURCE ELEMENT. 
+	 * (i.e. translationDescriptor.parent is ignored when adding new root level elements)
+	 * 
+	 * @param editingDomain
+	 * @param sourceElement
+	 * @return list of affected Resources
+	 */
+	Collection<Resource> getAffectedResources(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException ;
+		
 	/**
 	 * Filters out any source elements that should not be translated.
 	 * @param translatorConfig 

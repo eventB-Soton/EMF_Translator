@@ -25,9 +25,6 @@
       <import plugin="org.eclipse.ui.ide" version="3.7.0" match="compatible"/>
       <import plugin="org.eclipse.emf.workspace" version="1.5.0" match="compatible"/>
       <import plugin="org.eclipse.core.resources" version="3.9.1" match="compatible"/>
-      <import plugin="org.eventb.emf.persistence" version="3.5.0" match="compatible"/>
-      <import plugin="org.rodinp.core" version="1.7.0" match="compatible"/>
-      <import plugin="org.eventb.emf.core" version="4.2.1" match="compatible"/>
    </requires>
 
    <plugin

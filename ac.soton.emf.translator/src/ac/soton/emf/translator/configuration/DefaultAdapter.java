@@ -10,10 +10,23 @@
  *******************************************************************************/
 package ac.soton.emf.translator.configuration;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.Resource.Factory.Registry;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 import ac.soton.emf.translator.TranslationDescriptor;
 
@@ -38,6 +51,13 @@ public class DefaultAdapter implements IAdapter {
 	}
 	
 	/**
+	 * return true if feature is null
+	 */
+	public boolean isRoot(TranslationDescriptor translationDescriptor) {
+		return translationDescriptor.feature==null;
+	}
+	
+	/**
 	 * return null
 	 */
 	@Override
@@ -45,6 +65,45 @@ public class DefaultAdapter implements IAdapter {
 		return null;
 	}
 	
+	/**
+	 * This default implementation returns all EMF resources in the same project as the source element
+	 * 
+	 * @param editingDomain
+	 * @param sourceElement
+	 * @return list of affected Resources
+	 */
+	@Override
+	public Collection<Resource> getAffectedResources(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException {
+		List<Resource> affectedResources = new ArrayList<Resource>();
+		//affectedResources.add(sourceElement.eResource());
+		String projectName = EcoreUtil.getURI(sourceElement).segment(1);
+		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+		if (project.exists()){
+			try {
+				IResource[] members = project.members();
+				ResourceSet resourceSet = editingDomain.getResourceSet();
+				for (IResource res : members){
+					final URI fileURI = URI.createPlatformResourceURI(projectName + "/" + res.getName(), true);
+					Registry registry = Resource.Factory.Registry.INSTANCE;
+					if (registry.getExtensionToFactoryMap().containsKey(fileURI.fileExtension())){
+						Resource resource = resourceSet.getResource(fileURI, false);
+						if (resource != null) {
+							if (!resource.isLoaded()) {
+								resource.load(Collections.emptyMap());
+							}
+							if (resource.isLoaded()) {
+								affectedResources.add(resource);
+							} 
+						}
+					}
+				}
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+		}
+		return affectedResources;
+	}
+		
 	/**
 	 * This implementation always returns true (i.e. do not filter)
 	 * 

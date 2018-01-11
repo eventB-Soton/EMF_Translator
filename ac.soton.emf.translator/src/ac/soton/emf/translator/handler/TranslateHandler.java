@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
+ *  Copyright (c) 2015-2017 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -11,18 +11,23 @@
 package ac.soton.emf.translator.handler;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -49,63 +54,82 @@ public class TranslateHandler extends AbstractHandler {
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
 	 */
 	@Override
-	public final Object execute(ExecutionEvent event) throws ExecutionException {
+	public final IStatus execute(final ExecutionEvent event) throws ExecutionException {
 		final EObject sourceElement;
 		ISelection selection = HandlerUtil.getCurrentSelection(event);
 		if (selection instanceof IStructuredSelection && !selection.isEmpty()){
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
 			sourceElement = getEObject(obj);
 		} else sourceElement = null;
-		if (sourceElement==null) return null;
-		
+		if (sourceElement==null) { 
+			return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07);
+		}
+
 		IWorkbenchWindow activeWorkbenchWindow = HandlerUtil.getActiveWorkbenchWindow(event);
 		final Shell shell = activeWorkbenchWindow.getShell();
-			final String commandId = event.getCommand().getId();
-			
-			//get translator factory
-			try {
-				final TranslatorFactory factory = TranslatorFactory.getFactory();
-				if (factory != null && factory.canTranslate(commandId, sourceElement.eClass())){
-					ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
-					try {
-						dialog.run(true, true, new IRunnableWithProgress(){
-							public void run(IProgressMonitor monitor) throws InvocationTargetException { 
-								try {
-									SubMonitor submonitor = SubMonitor.convert(monitor, "preProcessing", 3);
+		final String commandId = event.getCommand().getId();
+
+		//get translator factory
+		try {
+			final TranslatorFactory factory = TranslatorFactory.getFactory();
+			ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
+			if (factory != null && factory.canTranslate(commandId, sourceElement.eClass())){
+				dialog.run(true, true, new IRunnableWithProgress(){			
+						public void run(IProgressMonitor monitor) throws InvocationTargetException { 
+							try {
+								SubMonitor submonitor = SubMonitor.convert(monitor, "validating", 5);
+								status = validate(event, submonitor.newChild(1));
+								if (status.isOK()){
+									submonitor.setTaskName("preprocessing");
 									preProcessing(sourceElement, commandId, submonitor.newChild(1));
-									status = factory.translate(sourceElement, commandId, submonitor.newChild(1));
+									submonitor.setTaskName("translating");
+									final TransactionalEditingDomain editingDomain = 
+											TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet());
+									status = factory.translate(editingDomain, sourceElement, commandId, submonitor.newChild(2));
+									submonitor.setTaskName("postProcessing");
 									postProcessing(sourceElement, commandId, submonitor.newChild(1));
-								} catch (Exception e) {
-									throw new InvocationTargetException(e);
+									save(editingDomain, submonitor.newChild(1));
 								}
+							} catch (Exception e) {
+								throw new InvocationTargetException(e);
 							}
-						});
-					} catch (InvocationTargetException e) {
-				    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
-						Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-						
-					} catch (InterruptedException e) {
-				    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
-						Activator.logError(Messages.TRANSLATOR_MSG_08, e);
-						
-					}finally{
-						if (status != null && !status.isOK()){
-							MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
 						}
-					}
+					});
 				}
-			} catch (CoreException e) {
-				Activator.logError(Messages.TRANSLATOR_MSG_07, e);
-				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_07, e.getMessage());
+		} catch (InterruptedException e) {
+	    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_08, e);        	
+			Activator.logError(Messages.TRANSLATOR_MSG_08, e);
+		}catch (Exception e) {
+			e.printStackTrace();
+	    	status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.TRANSLATOR_MSG_07, e);
+			Activator.logError(Messages.TRANSLATOR_MSG_07, e);
+		}finally{
+			if (status != null && !status.isOK()){
+				MessageDialog.openError(shell, Messages.TRANSLATOR_MSG_09, status.getMessage());
 			}
-		return null;
+		}
+		return status;
 	}
 
+	/**
+	 * This can be overridden to perform some validation.
+	 * 
+	 * translation will only proceed if an OK_STATUS is returned.
+	 * 
+	 * @param ExecutionEvent
+	 * @param monitor
+	 * @return status = OK to continue translation, INFO to report validation errors and cancel translation
+	 * @throws ExecutionException 
+	 */
+	protected IStatus validate(ExecutionEvent event, IProgressMonitor monitor) throws ExecutionException {
+		monitor.done();
+		return Status.OK_STATUS;
+	}
 
 	/**
 	 * From the selected object, get an EObject that can be translated.
 	 * The default code handles 
-	 * 	selection is an EObject (return object castr to EObject)
+	 * 	selection is an EObject (return object cast to EObject)
 	 * 	selection is an IAdaptable (return adapted EObject)
 	 *  selection is an EMF Resource (return contained EObject)
 	 * This can be overridden to handle other cases
@@ -127,7 +151,6 @@ public class TranslateHandler extends AbstractHandler {
 		return sourceElement;
 	}
 
-	
 	/**
 	 * This can be overridden to add some pre-processing before the translation
 	 * default implementation does nothing
@@ -138,8 +161,7 @@ public class TranslateHandler extends AbstractHandler {
 	protected void preProcessing(EObject sourceElement, String commandId, IProgressMonitor monitor) throws Exception {
         monitor.done();
 	}
-		
-	
+
 	/**
 	 * This can be overridden to add some post-processing after the translation
 	 * default implementation does nothing
@@ -151,5 +173,38 @@ public class TranslateHandler extends AbstractHandler {
 	protected void postProcessing(EObject sourceElement, String commandId, IProgressMonitor monitor) throws Exception {
         monitor.done();
 	}
+	
+	/**
+	 * Save modified resources
+	 * This can be overridden to use particular persistence mechanisms
+	 * 
+	 * The default implementation saves all modified
+	 * resources in the resource set of the editing domain
+	 * 
+	 * @param editingDomain
+	 * @param monitor
+	 * @throws Exception 
+	 */
+	protected void save(final TransactionalEditingDomain editingDomain, IProgressMonitor monitor) throws Exception {
+		ResourcesPlugin.getWorkspace().run(new ICoreRunnable() {
+			public void run(final IProgressMonitor monitor) throws CoreException{
+				try{
+					//try to save all the modified resources
+					for (Resource resource : editingDomain.getResourceSet().getResources()){
+						if (resource.isModified()){
+							resource.save(Collections.emptyMap());
+							monitor.worked(1);
+						}
+					}
+				}catch (Exception e) {
+					//throw this as a CoreException
+					new Exception(e);
+				}
+				monitor.done();
+			}
+		},monitor);
+		monitor.done();
+	}
+	
 	
 }
