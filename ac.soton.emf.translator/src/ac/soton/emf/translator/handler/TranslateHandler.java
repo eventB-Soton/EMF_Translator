@@ -16,7 +16,6 @@ import java.util.Collections;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
@@ -80,11 +79,10 @@ public class TranslateHandler extends AbstractHandler {
 								SubMonitor submonitor = SubMonitor.convert(monitor, "validating", 5);
 								status = validate(event, submonitor.newChild(1));
 								if (status.isOK()){
+									final TransactionalEditingDomain editingDomain = getEditingDomain(sourceElement);
 									submonitor.setTaskName("preprocessing");
 									preProcessing(sourceElement, commandId, submonitor.newChild(1));
 									submonitor.setTaskName("translating");
-									final TransactionalEditingDomain editingDomain = 
-											TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet());
 									status = factory.translate(editingDomain, sourceElement, commandId, submonitor.newChild(2));
 									submonitor.setTaskName("postProcessing");
 									postProcessing(sourceElement, commandId, submonitor.newChild(1));
@@ -111,6 +109,25 @@ public class TranslateHandler extends AbstractHandler {
 		return status;
 	}
 
+
+	/**
+	 * This can be overridden to provide the TransactionalEditingDomain 
+	 * to be used for generating the new EMF elements
+	 * 
+	 * @param sourceElement
+	 * @return Transactional editing domain
+	 */
+	protected TransactionalEditingDomain getEditingDomain(EObject sourceElement){
+		TransactionalEditingDomain ted=null;
+		if (sourceElement.eResource()!=null && sourceElement.eResource().getResourceSet()!=null){
+			ted = TransactionalEditingDomain.Factory.INSTANCE.getEditingDomain(sourceElement.eResource().getResourceSet());
+		}
+		if (ted==null){
+			ted = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+		}
+		return ted;
+	}
+	
 	/**
 	 * This can be overridden to perform some validation.
 	 * 
