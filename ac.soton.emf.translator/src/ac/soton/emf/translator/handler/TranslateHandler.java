@@ -81,14 +81,14 @@ public class TranslateHandler extends AbstractHandler {
 									IStatus validationStatus = validate(event, submonitor.newChild(1));
 									status.merge(validationStatus);
 									if (validationStatus.getSeverity()<IStatus.ERROR){
-										setEditingDomain(sourceElement);
+										editingDomain = getEditingDomain(sourceElement);
 										submonitor.setTaskName("preprocessing");
 										status.merge(
 											preProcessing(sourceElement, commandId, submonitor.newChild(1))
 											);
 										submonitor.setTaskName("translating");
 										status.merge(
-											factory.translate(editingDomain, sourceElement, commandId, submonitor.newChild(2))
+											factory.translate(getEditingDomain(), sourceElement, commandId, submonitor.newChild(2))
 											);
 										submonitor.setTaskName("postProcessing");
 										status.merge(
@@ -112,19 +112,6 @@ public class TranslateHandler extends AbstractHandler {
 			}
 		}
 		return status;
-	}
-
-	/**
-	 * This sets the editing domain to be used during translation
-	 * It will be called by the execute method of the handler and should not be called elsewhere.
-	 * 
-	 * @param sourceElement
-	 * 
-	 */
-	private void setEditingDomain(EObject sourceElement){
-		if (editingDomain == null){
-			editingDomain = getEditingDomain(sourceElement);
-		}
 	}
 
 
