@@ -41,7 +41,7 @@ import ac.soton.emf.translator.TranslatorFactory;
 import ac.soton.emf.translator.impl.Messages;
 
 /**
- * handler for commands to run the translator.
+ * Handler for commands to run the translator.
  * 
  * @author cfs 
  *
@@ -77,24 +77,32 @@ public class TranslateHandler extends AbstractHandler {
 					dialog.run(true, true, new IRunnableWithProgress(){			
 							public void run(IProgressMonitor monitor) throws InvocationTargetException { 
 								try {
-									SubMonitor submonitor = SubMonitor.convert(monitor, "validating", 5);
+									editingDomain = getEditingDomain(sourceElement);
+									
+									SubMonitor submonitor = SubMonitor.convert(monitor, "validating", 10);
 									IStatus validationStatus = validate(event, submonitor.newChild(1));
+									
 									status.merge(validationStatus);
-									if (validationStatus.getSeverity()<IStatus.ERROR){
-										editingDomain = getEditingDomain(sourceElement);
+									if (enablePreProcessing(validationStatus)){
 										submonitor.setTaskName("preprocessing");
 										status.merge(
 											preProcessing(sourceElement, commandId, submonitor.newChild(1))
 											);
+										save(submonitor.newChild(2));
+									}
+									if (enableTranslation(validationStatus)){
 										submonitor.setTaskName("translating");
 										status.merge(
 											factory.translate(getEditingDomain(), sourceElement, commandId, submonitor.newChild(2))
 											);
+										save(submonitor.newChild(2));
+									}
+									if (enablePostProcessing(validationStatus)){
 										submonitor.setTaskName("postProcessing");
 										status.merge(
 											postProcessing(sourceElement, commandId, submonitor.newChild(1))
 											);
-										save(submonitor.newChild(1));
+										save(submonitor.newChild(2));
 									}
 								} catch (Exception e) {
 									throw new InvocationTargetException(e);
@@ -114,7 +122,42 @@ public class TranslateHandler extends AbstractHandler {
 		return status;
 	}
 
+	/**
+	 * Return whether or not the pre-processing should run based on the validation errors
+	 * 
+	 * Default is to only run if the severity status is less than error
+	 * 
+	 * @param validationStatus
+	 * @return
+	 */
+	protected boolean enablePreProcessing(IStatus validationStatus) {
+		return validationStatus.getSeverity()<IStatus.ERROR;
+	}
 
+	/**
+	 * Return whether or not the translation should run based on the validation errors
+	 * 
+	 * Default is to only run if the severity status is less than error
+	 * 
+	 * @param validationStatus
+	 * @return
+	 */
+	protected boolean enableTranslation(IStatus validationStatus) {
+		return validationStatus.getSeverity()<IStatus.ERROR;
+	}
+
+	/**
+	 * Return whether or not the post-processing should run based on the validation errors
+	 * 
+	 * Default is to only run if the severity status is less than error
+	 * 
+	 * @param validationStatus
+	 * @return
+	 */
+	protected boolean enablePostProcessing(IStatus validationStatus) {
+		return validationStatus.getSeverity()<IStatus.ERROR;
+	}
+	
 	/**
 	 * 
 	 * This can be overridden to provide the TransactionalEditingDomain 
