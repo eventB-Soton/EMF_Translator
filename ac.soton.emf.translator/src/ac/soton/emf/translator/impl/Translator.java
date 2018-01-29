@@ -283,10 +283,6 @@ public class Translator {
 								throw new Exception("cannot resolve "+translationDescriptor.parent);
 							}
 						}
-						Resource resource = translationDescriptor.parent.eResource();
-						if (resource==null){
-							throw new Exception("element not in a resource "+translationDescriptor.parent);
-						}
 						if (translationDescriptor.parent.eClass().getEAllStructuralFeatures().contains(translationDescriptor.feature) &&
 							translationDescriptor.feature.getEType().isInstance(value)){
 							
@@ -322,7 +318,8 @@ public class Translator {
 										translationDescriptor.parent.eSet(translationDescriptor.feature, translationDescriptor.feature.getDefaultValue());
 							}
 							//add to list of modifiedResources if not already there
-							if (!modifiedResources.contains(resource)){
+							Resource resource = translationDescriptor.parent.eResource();
+							if (resource !=null && !modifiedResources.contains(resource)){
 								modifiedResources.add(resource);
 							}
 						}else{
