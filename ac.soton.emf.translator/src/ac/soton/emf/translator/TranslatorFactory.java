@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -172,9 +173,7 @@ public class TranslatorFactory {
 			TranslatorConfig translatorConfig = getTranslatorConfig(commandId, sourceElement.eClass());
 			Translator translator = new Translator(translatorConfig);
 			monitor.worked(2);
-			if (editingDomain==null){
-				editingDomain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-			}
+			Assert.isTrue(editingDomain!=null, "Editing Domain must not be null");
 			final TranslateCommand translateCommand = new TranslateCommand(editingDomain, sourceElement, translator);	
 			if (translateCommand.canExecute()) {	
 				// run with progress
