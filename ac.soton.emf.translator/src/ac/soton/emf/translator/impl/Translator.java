@@ -367,7 +367,7 @@ public class Translator {
 				List<IRule> firedRules = new ArrayList<IRule>();
 				for (IRule rule : deferredRules.get(sourceElement)){
 					if (rule != null && rule.enabled(sourceElement)) {
-						if (late==rule.fireLate() && rule.dependenciesOK(sourceElement, translatedElements)){
+						if ((late || !rule.fireLate()) && rule.dependenciesOK(sourceElement, translatedElements)){
 							translatedElements.addAll(rule.fire(sourceElement, translatedElements));
 							firedRules.add(rule);
 						}
