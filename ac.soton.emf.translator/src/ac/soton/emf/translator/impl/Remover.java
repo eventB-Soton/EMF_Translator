@@ -75,24 +75,31 @@ public class Remover {
 		contents.add(0,root);
 		ArrayList<EObject> remove = new ArrayList<EObject>();
 		for(EObject eObject : contents){
+			
+			//also check elements that are referenced in other resources
+			// (uses recursion)
 			EClass eClass = eObject.eClass();
 			EList<EReference> refs = eClass.getEReferences();
 			for (EReference ref : refs){
 				if (!ref.isContainment()){
 					Object target = eObject.eGet(ref);
-					if (target instanceof EObject && ((EObject)target).eResource()!=null &&
+					if (target instanceof EObject && 
+							((EObject)target).eResource()!=null &&
 							!((EObject)target).eResource().equals(root.eResource())){
 						remove.addAll(getPreviouslyTranslatedElements((EObject) target));
 					}
 				}
 			}
 
+			//if this element is annotated with the sourceID
+			// remove it
 			if (adapter.isAnnotatedWith(eObject,sourceID)){
 				remove.add(eObject);
 				if(!modifiedResources.contains(root.eResource())){
 					modifiedResources.add(root.eResource());
 				}
 			}
+			
 		}
 		return remove;
 	}
