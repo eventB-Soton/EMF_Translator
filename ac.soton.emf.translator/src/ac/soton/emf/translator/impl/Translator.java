@@ -24,6 +24,7 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
@@ -289,12 +290,17 @@ public class Translator {
 							Object featureValue = translationDescriptor.parent.eGet(translationDescriptor.feature);
 		
 							if (featureValue instanceof EList){	
-								if(translationDescriptor.remove == false){											
-									translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
-									translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
+								if(translationDescriptor.remove == false){	
+									
+									//the following alterations to the value should NOT be performed when the value is being added as a (non-containment) reference
+									if (!(translationDescriptor.feature instanceof EReference) || ((EReference)translationDescriptor.feature).isContainment()){
+										//annotations may be added to record the id of the source element from which this value was generated
+										translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
+										//also the priority may be set to influence the position within a containment
+										translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
+									}
 									
 									int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
-	
 									((EList)featureValue).add(pos, translationDescriptor.value);
 											
 								}
