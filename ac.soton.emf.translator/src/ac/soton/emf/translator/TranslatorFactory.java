@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015-2017 University of Southampton.
+ *  Copyright (c) 2015-2018 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -164,6 +164,7 @@ public class TranslatorFactory {
 	 * @param commandId
 	 * @param monitor 
 	 * @throws ExecutionException 
+	 * @since 3.0
 	 */
 	public IStatus translate(TransactionalEditingDomain editingDomain, EObject sourceElement, String commandId, IProgressMonitor monitor) throws ExecutionException {
 		IStatus status = null;
@@ -207,6 +208,7 @@ public class TranslatorFactory {
 	 * @param commandId
 	 * @param monitor 
 	 * @throws ExecutionException 
+	 * @since 3.0
 	 */
 	
 	public IStatus untranslate(TransactionalEditingDomain editingDomain, EObject sourceElement, String commandId, IProgressMonitor monitor) throws ExecutionException {
