@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
+ *  Copyright (c) 2015-2018 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -34,6 +34,7 @@ public interface IAdapter {
 	 * returns true if the translation descriptor describes a new root level element
 	 * @param translationDescriptor
 	 * @return
+	 * @since 3.0
 	 */
 	boolean isRoot(TranslationDescriptor translationDescriptor);
 	
@@ -60,6 +61,7 @@ public interface IAdapter {
 	 * @param editingDomain
 	 * @param sourceElement
 	 * @return list of affected Resources
+	 * @since 3.0
 	 */
 	Collection<Resource> getAffectedResources(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException ;
 		
