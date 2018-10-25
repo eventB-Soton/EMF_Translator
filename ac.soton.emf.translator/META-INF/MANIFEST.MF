@@ -16,3 +16,4 @@ Export-Package: ac.soton.emf.translator,
  ac.soton.emf.translator.configuration,
  ac.soton.emf.translator.handler,
  ac.soton.emf.translator.utils
+Automatic-Module-Name: ac.soton.emf.translator
