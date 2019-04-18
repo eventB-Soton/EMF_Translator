@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2015-2017 University of Southampton.
+ *  Copyright (c) 2015-2019 University of Southampton.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -12,7 +12,9 @@ package ac.soton.emf.translator.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EClass;
@@ -25,6 +27,10 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import ac.soton.emf.translator.configuration.IAdapter;
 import ac.soton.emf.translator.utils.Find;
 
+/**
+ * @author cfs
+ *
+ */
 public class Remover {
 
 	private final Collection<Resource> resources;
@@ -32,6 +38,13 @@ public class Remover {
 	private final IAdapter adapter;
 	
 	private List<Resource> modifiedResources;
+	
+	/**
+	 * @htson: The set of searched EObjects. This is used in
+	 *         {@link #getPreviouslyTranslatedElements()} to stop recursion in the cases where
+	 *         cyclic references between EObjects presents.
+	 */
+	private Set<EObject> searchedEObjects;
 	
 	public Remover(final Collection<Resource> affectedResources, Object sourceID, IAdapter adapter) {
 		this.resources = affectedResources;
@@ -50,10 +63,13 @@ public class Remover {
 				if (res!=null && !res.getContents().isEmpty()) {
 					EObject component = res.getContents().get(0);
 					if (component instanceof EObject){
+						// @htson: Create the (empty) set of searched EObjects
+						searchedEObjects = new HashSet<EObject>();
 						List<EObject> previouslyTranslatedElements = getPreviouslyTranslatedElements(component);
 						for (EObject eObject : previouslyTranslatedElements){
 							EcoreUtil.delete(eObject, true);	//this deletes the object from its containment and removes all references to it and its content
-							if (!modifiedResources.contains(res)) modifiedResources.add(res);
+							if (!modifiedResources.contains(res))
+								modifiedResources.add(res);
 						}
 					}
 				}
@@ -62,7 +78,7 @@ public class Remover {
 		return modifiedResources;
 	}
 	
-	/*
+	/**
 	 * finds all elements that have previously been translated from this translations source
 	 * 
 	 * As a side effect, updates the list of the modified resources
@@ -70,10 +86,18 @@ public class Remover {
 	 * @return List of elements
 	 */
 	private ArrayList<EObject> getPreviouslyTranslatedElements(final EObject root) {
+		ArrayList<EObject> remove = new ArrayList<EObject>();
+
+		// @htson: Returns (an empty list) if this EObject has been searched before.
+		if (searchedEObjects.contains(root)) {
+			return remove;
+		}
 		List<EObject> contents = Find.eAllContents(root, EcorePackage.Literals.EOBJECT);
 		contents.remove(null);
 		contents.add(0,root);
-		ArrayList<EObject> remove = new ArrayList<EObject>();
+
+		// @htson: Add all the contents of the root EObject to the set of searched objects. 
+		searchedEObjects.addAll(contents);
 		for(EObject eObject : contents){
 			
 			//also check elements that are referenced in other resources
