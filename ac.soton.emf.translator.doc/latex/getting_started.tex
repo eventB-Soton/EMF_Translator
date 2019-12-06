@@ -7,16 +7,17 @@
 \begin{itemize}
 \item 
 In order to start using the EMF2EMF translator you need to make the EMF2EMF translator plugin available to your code. 
-You do this either by importing the plugin into your workspace or by installing it into your plug-in development target.
-While the latter is usually prefereable, at the time of writing there is no published SDK version of the plugin so, for now, we would recommend the first approach so that you have the plug-in source code when you are de-bugging.
-The plug-in can be found in the git repository \textbf{iUML-B\_Utils} on the Rodin Sourceforge project.   
+You do this either by importing the plug-in source code project into your workspace or by installing the published SDK version of the feature into your Eclipse development target.
+The latter is usually preferable.
+
+The plug-in source code can be found in the git repository \textbf{EMF\_Translator} in the \textbf{Event-B Soton} area of github.   
 \begin{verbatim}
-	https://git.code.sf.net/p/rodin-b-sharp/iUML_B_Utils
+	https://github.com/eventB-Soton/EMF_Translator.git
 \end{verbatim}
 The plug-in you need to import is \texttt{ac.soton.emf.translator}.
 If you prefer to work with the latest release you can find this in the git history of the plug-in and check out that commit.
 
-Alternatively, install into your target platform using the Rodin update site - look for \textbf{EMF utilities (Soton)} under the \textbf{Utilities} category.
+Alternatively, install the published SDK feature into your target platform using the Rodin update site - look for \textbf{EMF Translator SDK} under the \textbf{Utilities} category.
 \item 
 Add a dependency to \texttt{ac.soton.emf.translator} in the \texttt{manifest.mf} file of your plugin.
 \end{itemize}
@@ -49,7 +50,7 @@ EMF2EMF provides a handler for you, so unless you have a strong reason to modify
 	\end{itemize}
 	Now right click on the \texttt{menuContribution} and add a child \texttt{command} with details as follows.
 	\begin{itemize}
-		\item \textbf{commandId:} this must be the identifier of the command that you added at the start of of section \ref{sec:ui}.
+		\item \textbf{commandId:} this must be the identifier of the command that you added at the start of section \ref{sec:ui}.
 		\item \textbf{label:} a name for the menu item (this is what will be written in the menu/toolbar etc.).
 		\item \textbf{icon:} a relative path to the icon to be displayed. Usually \texttt{icons/<myicon>.png}. 
 		\item \textbf{style:} set to \emph{push}

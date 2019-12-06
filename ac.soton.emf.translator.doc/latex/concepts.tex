@@ -1,22 +1,30 @@
 \section{Concepts}
 \label{sec:concepts}
 
-The Generator framework provides:
+The Translator framework provides:
 
-* A toolbar button to initiate the generation
-* Generic code to remove previously generated elements
-* Generic code to organise the incorporation of newly generated elements
-* Utilities to aid the creation of new elements
-* An abstract basis for client defined rules
-* An extension point for clients to declare generators and generation rules
+\begin{itemize}
+	\item A toolbar button to initiate the generation
+	\item Generic code to remove previously generated elements
+	\item Generic code to organise the incorporation of newly generated elements
+	\item Utilities to aid the creation of new elements
+	\item An abstract basis for client defined rules
+	\item An extension point for clients to declare translators and translation rules
+\end{itemize}
 
-The client rules return generation descriptors (rather than modifying the target model directly). The framework takes care of updating the model (within the clients Transactional Editing Domain) provided the generation completes successfully. This ensures that the model is not left in an inconsistent state should the generation fail. The generation descriptors allow the client to specify where the new element should be contained and a priority which will be used to influence the placement of the new element within the containment ordering.
+The client rules return generation descriptors (rather than modifying the target model directly). 
+The framework takes care of updating the model (within the clients Transactional Editing Domain) provided the generation completes successfully. 
+This ensures that the model is not left in an inconsistent state should the generation fail. 
+The generation descriptors allow the client to specify where the new element should be contained and a priority which will be used to influence the placement of the new element within the containment ordering.
+The translator can easily be configured to common use cases by providing an adapter.
 
 To define a particular generator a client should:
-
-* Define an extension of org.eclipse.ui.handlers to enable the generate command when the activePartID is their Editor (see [[Defining a generator handler]])
-* Define an extension of ac.soton.eventb.emf.diagrams.generator.rule to make the generator framework aware of your generator and its rule classes.
-* Implement your rule classes
+\begin{enumerate}
+	\item Define extensions of the eclipse UI extension points to provide a command handler as defined in section \ref{sec:ui}
+	\item Define extensions of the translator and ruleset extension points as defined in sections \ref{sec:translatorDecln} and \ref{sec:rulesDecln} 
+	\item Extend the translators adapter class to specialise behaviour to a particular use case as described in section \ref{sec:configure}.
+	\item Implement rule classes as described in section \ref{sec:rulesWriting}
+\end{enumerate}
 
 \subsection{Adapter}
 \label{sec:adapter}
@@ -28,35 +36,45 @@ To define a particular generator a client should:
 
 Each rule should return a collection of one or more Generation Descriptors. Generation Descriptors have the following fields which are explained in this section.
 
-* EventBElement parent;
-* EStructuralFeature feature;
-* Object value;
-* Integer priority;
-* Boolean editable;
-* Boolean remove;
+\begin{itemize}
+	\item EventBElement parent;
+	\item EStructuralFeature feature;
+	\item Object value;
+	\item Integer priority;
+	\item Boolean editable;
+	\item Boolean remove;
+\end{itemize}
 
 The feature of the parent will be changed in the following ways:
 
-If remove is false:
-* 1) If the feature is a containment and the value is an element of the correct kind, the value will be added to the containment in a position according to the priority
-* 2) If the feature is a reference and the value is an element of the correct kind, the value will be added to the reference in a position according to the priority
-* 3) If the feature is an EAttribute and the value is of the correct type, the feature will be set to the value
+\paragraph{If remove is false:}
+\begin{itemize}
+	\item  If the feature is a containment and the value is an element of the correct kind, the value will be added to the containment in a position according to the priority
+	\item  If the feature is a reference and the value is an element of the correct kind, the value will be added to the reference in a position according to the priority
+	\item  If the feature is an EAttribute and the value is of the correct type, the feature will be set to the value
+\end{itemize}
 
-Priority can be used to control the relative position of the generated elements  
-* 1 - must come first
-* 10 - not important
-* ---user entered items---
-* 0 must come after user entered items
-* -10 must come last
+\textbf{Priority} can be used to control the relative position of the generated elements as follows
+\begin{itemize}
+	\item 1 - must come first
+	\item 10 - not important
+	\item ---user entered items---
+	\item 0 must come after user entered items
+	\item -10 must come last
+\end{itemize}
 
-Editable - this affects read-only status of the generated element and whether or not it will be preserved or re-generated in a subsequent generation.
-* false - the element is set as read-only (the user cannot change its attributes nor add/remove children), any existing copy of the element will be deleted and re-generated at each re-generation
-* true  - the element is not read-only and will not be deleted before re-generation. (N.B. It is the responsibility of the client rules to check whether this element already exists and only only generate a new one if it does not)
+\textbf{Editable} - this affects read-only status of the generated element and whether or not it will be preserved or re-generated in a subsequent generation.
+\begin{itemize}
+	\item  false - the element is set as read-only (the user cannot change its attributes nor add/remove children), any existing copy of the element will be deleted and re-generated at each re-generation
+	\item  true  - the element is not read-only and will not be deleted before re-generation. (N.B. It is the responsibility of the client rules to check whether this element already exists and only generate a new one if it does not).
+\end{itemize}
 
-If remove is true:
-* 1) If the feature is a containment and the value is an element of the correct kind, the value will be deleted from the containment
-* 2) If the feature is a reference and the value is an element of the correct kind, the value will be removed from the reference
-* 3) If the feature is an EAttribute, the feature will be unset 
+\paragraph{If remove is true:}
+\begin{itemize}
+	\item If the feature is a containment and the value is an element of the correct kind, the value will be deleted from the containment
+	\item If the feature is a reference and the value is an element of the correct kind, the value will be removed from the reference
+	\item If the feature is an EAttribute, the feature will be unset 
+\end{itemize}
 
 \subsection{Rules}
 \label{sec:rules}
