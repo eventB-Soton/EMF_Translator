@@ -41,9 +41,9 @@
 
 <div><h2 id="sec:setup">2.1 Setup</h2>
 <ul class="itemize">
-<li><p>In order to start using the EMF2EMF translator you need to make the EMF2EMF translator plugin available to your code. You do this either by importing the plugin into your workspace or by installing it into your plug-in development target. While the latter is usually prefereable, at the time of writing there is no published SDK version of the plugin so, for now, we would recommend the first approach so that you have the plug-in source code when you are de-bugging. The plug-in can be found in the git repository <b class="bfseries">iUML-B_Utils</b> on the Rodin Sourceforge project. </p><pre>
-	https://git.code.sf.net/p/rodin-b-sharp/iUML_B_Utils
-</pre><p> The plug-in you need to import is <tt class="ttfamily">ac.soton.emf.translator</tt>. If you prefer to work with the latest release you can find this in the git history of the plug-in and check out that commit. </p><p>Alternatively, install into your target platform using the Rodin update site - look for <b class="bfseries">EMF utilities (Soton)</b> under the <b class="bfseries">Utilities</b> category. </p></li><li><p>Add a dependency to <tt class="ttfamily">ac.soton.emf.translator</tt> in the <tt class="ttfamily">manifest.mf</tt> file of your plugin. </p></li>
+<li><p>In order to start using the EMF2EMF translator you need to make the EMF2EMF translator plugin available to your code. You do this either by importing the plug-in source code project into your workspace or by installing the published SDK version of the feature into your Eclipse development target. The latter is usually preferable. </p><p>The plug-in source code can be found in the git repository <b class="bfseries">EMF_Translator</b> in the <b class="bfseries">Event-B Soton</b> area of github. </p><pre>
+	https://github.com/eventB-Soton/EMF_Translator.git
+</pre><p> The plug-in you need to import is <tt class="ttfamily">ac.soton.emf.translator</tt>. If you prefer to work with the latest release you can find this in the git history of the plug-in and check out that commit. </p><p>Alternatively, install the published SDK feature into your target platform using the update site - look for <b class="bfseries">EMF Translator SDK</b>. </p></li><li><p>Add a dependency to <tt class="ttfamily">ac.soton.emf.translator</tt> in the <tt class="ttfamily">manifest.mf</tt> file of your plugin. </p></li>
 </ul></div>
 
 

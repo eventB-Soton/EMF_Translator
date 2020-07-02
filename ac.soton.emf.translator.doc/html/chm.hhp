@@ -15,26 +15,26 @@ Title=EMF2EMF Transformation Framework Developers Manual
 Help="EMF2EMF Transformation Framework Developers Manual","chm.hhc","chm.hhk","index.html","index.html",,,,,0x73520,,0x383e,[200,200,1000,800],,,,,,,0
 
 [FILES]
-sec-overview.html
-sec-editable.html
-sec-adapter.html
-index.html
-sec-configure.html
-sec-descriptors.html
-sec-release-notes.html
-sec-priorities.html
 sec-concepts.html
 sec-legal.html
-sec-rulesWriting.html
-sec-ui.html
-sec-tasks.html
-sec-setup.html
-sec-reference.html
 sec-rulesDecln.html
-sec-translatorDecln.html
 sec-user-agreement.html
+sec-overview.html
+sec-tasks.html
 sec-getting-started.html
+index.html
+sec-reference.html
+sec-rulesWriting.html
 sec-rules.html
+sec-descriptors.html
+sec-setup.html
+sec-ui.html
+sec-priorities.html
+sec-translatorDecln.html
+sec-editable.html
+sec-adapter.html
+sec-release-notes.html
+sec-configure.html
 
 
 [MERGE FILES]

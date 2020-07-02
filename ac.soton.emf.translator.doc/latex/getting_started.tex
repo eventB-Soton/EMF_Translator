@@ -17,7 +17,7 @@ The plug-in source code can be found in the git repository \textbf{EMF\_Translat
 The plug-in you need to import is \texttt{ac.soton.emf.translator}.
 If you prefer to work with the latest release you can find this in the git history of the plug-in and check out that commit.
 
-Alternatively, install the published SDK feature into your target platform using the Rodin update site - look for \textbf{EMF Translator SDK} under the \textbf{Utilities} category.
+Alternatively, install the published SDK feature into your target platform using the update site - look for \textbf{EMF Translator SDK}.
 \item 
 Add a dependency to \texttt{ac.soton.emf.translator} in the \texttt{manifest.mf} file of your plugin.
 \end{itemize}
@@ -119,16 +119,31 @@ We first declare the translator and link it to the command that you defined in s
 \label{sec:release-notes}
 
 \begin{itemize}
+\item \textbf{3.0.1} Bug fix: Avoid infinite recursion when getting previously translated elements
+\item \textbf{3.0.0} - 
+	\begin{itemize}
+	\item move 'getAffectedResources' to adapter so it can be specialised by clients
+	\item move saving of resources to handler level so that it can be specialised by clients
+	\item support automatic creation of resources when specified by translation rules
+	\item Provide an un-translate facility
+	\item Improve status and exception handling
+	\item Add support for running validation prior to translation
+	\item Support several translations for same command id
+	\item Support translation into same file as source
+	\item Handler no longer converts Rodin elements to Event-B EMF. A new method getEObject can be overridden by clients to do this	(this removes dependencies on Rodin and Event-B EMF plugins)
+	\item feature renamed from ac.soton.emf.utilities (version numbering inherited)
+	\item log exceptions thrown by translator command
+	\end{itemize}
 \item \textbf{2.1.1} - add release history for 2.1.0 to build
-\item \textbf{2.1.0} - Translator - 2.1.0
+\item \textbf{2.1.0} - 
 	\begin{itemize}
 	\item programmatic invocation
 	\item pre and post processing
 	\item adaptor support for defining position in containment
 	\end{itemize}
-\item \textbf{2.0.0} - Translator - 2.0.0 - more extensible translator extension (ruleset extension)
-\item \textbf{1.1.0} - Translator - 1.1.0 - make handler more flexible to generalise usage
-\item \textbf{1.0.0} - Translator - 1.0.0 - fix dialogue problem
+\item \textbf{2.0.0} - more extensible translator extension (ruleset extension)
+\item \textbf{1.1.0} - make handler more flexible to generalise usage
+\item \textbf{1.0.0} - fix dialogue problem
 \end{itemize}
 
 \subsubsection{Known Issues}
