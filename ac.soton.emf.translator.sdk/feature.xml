@@ -23,11 +23,21 @@
          id="ac.soton.emf.translator.feature"
          version="0.0.0"/>
 
+   <requires>
+      <import plugin="org.eclipse.help"/>
+   </requires>
+
    <plugin
          id="ac.soton.emf.translator.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
+
+   <plugin
+         id="ac.soton.emf.translator.doc"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
 </feature>
