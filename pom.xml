@@ -24,7 +24,7 @@
   <modules>
     <!-- LATER: List of modules in this build -->
     <module>ac.soton.emf.translator</module>
-    <!-- <module>ac.soton.emf.translator.doc</module> -->
+    <module>ac.soton.emf.translator.doc</module>
     <module>ac.soton.emf.translator.feature</module>
     <module>ac.soton.emf.translator.sdk</module>
   </modules>
