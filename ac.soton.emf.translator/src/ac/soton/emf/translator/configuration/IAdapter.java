@@ -60,7 +60,7 @@ public interface IAdapter {
 	 * 
 	 * @param editingDomain
 	 * @param sourceElement
-	 * @return list of affected Resources
+	 * @return a list of affected Resources
 	 * @since 3.0
 	 */
 	Collection<Resource> getAffectedResources(TransactionalEditingDomain editingDomain, EObject sourceElement) throws IOException ;
@@ -101,7 +101,7 @@ public interface IAdapter {
 	 *  hence, if translated elements are not annotated, subsequent translations are likely to cause duplication
 	 *  of the translated elements)
 	 * 
-	 * @param rootElement
+	 * @param object - the root source element being translated
 	 * @return
 	 */
 	Object getSourceId(Object object);
@@ -110,7 +110,7 @@ public interface IAdapter {
 	 * Sets the translatedBy attribute of the given object to the given String value
 	 * In translator the object will be an EObject for this to succeed.
 	 * 
-	 * @param translatedByID
+	 * @param sourceID
 	 * @param object
 	 */
 	void annotateTarget(Object sourceID, Object object);
@@ -128,16 +128,16 @@ public interface IAdapter {
 	 * Sets the priority attribute of the given object to the given integer value
 	 * In translator the object will be an EObject for this to succeed.
 	 * 
-	 * @param translatedByID
-	 * @param object
+	 * @param pri - the integer priority of the given object
+	 * @param object - the object to have its priority set
 	 */
-	void setPriority(int pri, Object value);
+	void setPriority(int pri, Object object);
 
 	/**
 	 * returns the position in the given List feature for the addition of the given new object
-	 * @param list
-	 * @param pri
-	 * @return
+	 * @param list - the list in which the given object needs to be placed
+	 * @param object - the object to be placed in the list
+	 * @return - the position in the list for the object to be placed
 	 */
 	int getPos(List<?> list, Object object);
 	

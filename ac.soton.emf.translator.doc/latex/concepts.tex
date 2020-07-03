@@ -1,62 +1,124 @@
 \section{Concepts}
 \label{sec:concepts}
 
-The Generator framework provides:
+The Translator framework provides:
 
-* A toolbar button to initiate the generation
-* Generic code to remove previously generated elements
-* Generic code to organise the incorporation of newly generated elements
-* Utilities to aid the creation of new elements
-* An abstract basis for client defined rules
-* An extension point for clients to declare generators and generation rules
+\begin{itemize}
+	\item A toolbar button to initiate the generation
+	\item Generic code to remove previously generated elements
+	\item Generic code to organise the incorporation of newly generated elements
+	\item Utilities to aid the creation of new elements
+	\item An abstract basis for client defined rules
+	\item An extension point for clients to declare translators and translation rules
+\end{itemize}
 
-The client rules return generation descriptors (rather than modifying the target model directly). The framework takes care of updating the model (within the clients Transactional Editing Domain) provided the generation completes successfully. This ensures that the model is not left in an inconsistent state should the generation fail. The generation descriptors allow the client to specify where the new element should be contained and a priority which will be used to influence the placement of the new element within the containment ordering.
+The client rules return generation descriptors (rather than modifying the target model directly). 
+The framework takes care of updating the model (within the clients Transactional Editing Domain) provided the generation completes successfully. 
+This ensures that the model is not left in an inconsistent state should the generation fail. 
+The generation descriptors allow the client to specify where the new element should be contained and a priority which will be used to influence the placement of the new element within the containment ordering.
+The translator can easily be configured to common use cases by providing an adapter.
 
 To define a particular generator a client should:
-
-* Define an extension of org.eclipse.ui.handlers to enable the generate command when the activePartID is their Editor (see [[Defining a generator handler]])
-* Define an extension of ac.soton.eventb.emf.diagrams.generator.rule to make the generator framework aware of your generator and its rule classes.
-* Implement your rule classes
+\begin{enumerate}
+	\item Define extensions of the eclipse UI extension points to provide a command handler as defined in section \ref{sec:ui}
+	\item Define extensions of the translator and ruleset extension points as defined in sections \ref{sec:translatorDecln} and \ref{sec:rulesDecln} 
+	\item Extend the translators adapter class to specialise behaviour to a particular use case as described in section \ref{sec:configure}.
+	\item Implement rule classes as described in section \ref{sec:rulesWriting}
+\end{enumerate}
 
 \subsection{Adapter}
 \label{sec:adapter}
-
-\texttt{<TO BE WRITTEN>}
+The adapter allows you to specify some functions which are likely to vary for different translations.
+Your adapter must implement IAdapter, but it can do this by extending the default adapter, DefaultAdapter.
+The adapter has the following methods:
+\begin{itemize}
+	\item \texttt{intialiseAdapter(Object sourceElement)} - 
+	If the adapter needs to store some kind of state throughout the translation it can be set up here.
+	(It could then be used in later calls to methods in the adapter).
+ 	This method will be called at the start of each translation with the source element of the translation.
+ 	\item \texttt{isRoot(TranslationDescriptor translationDescriptor)} - 
+ 	This allows you to specify which kind of newly generated elements should be the root of a model in a resource.
+ 	Return true if the translation descriptor describes a new root level element.
+ 	\item \texttt{getComponentURI(TranslationDescriptor translationDescriptor, EObject rootElement)}
+ 	This allows you to control where the output will be persisted.
+ 	Return a resource URI to be used in creating the new resource.
+ 	The root element of the translation is passed in case it is needed to construct the URI. 
+ 	(E.g. to find the containing project).
+ 	\item \texttt{getAffectedResources(TransactionalEditingDomain editingDomain, EObject sourceElement)} -
+ 	This should return a collection of potentially affected resources.
+ 	The resources should all be loaded in the resource set of the given editing domain.
+ 	N.B. CURRENTLY ALL RESOURCES ARE ASSUMED TO BE WITHIN THE SAME PROJECT AS THE SOURCE ELEMENT. 
+ 	\item \texttt{inputFilter(Object object, Object sourceID)} -
+ 	You can use this to filter out (i.e. ignore) any source elements that should not be translated.
+ 	Return true if the object should be translated and false to filter it out.
+ 	\item \texttt{outputFilter(TranslationDescriptor translationDescriptor)} -
+ 	You can use this to filter out any translationDescriptors that should not be acted upon.
+ 	Return true if this translation descriptor should be acted upon and false if it should be filtered out (ignored).
+ 	\item \texttt{match(Object obj1, Object obj2)} -
+ 	This allows you to specify whether two object should be considered to be essentially the same thing.
+ 	The translator needs to know this when it is searching for elements elsewhere in the output model.
+ 	\item \texttt{getSourceId(Object object)} -
+ 	This allows you to define an id for the given source root element.
+ 	This will be used to annotate all of the translation output elements.
+ 	Return null if you don't want any such annotation.
+ 	\item \texttt{annotateTarget(Object sourceID, Object object)} -
+ 	This allows you to control how translation output objects are annotated.
+ 	For example, if the object is an EObject and the sourceID is a String you could add an annotation with the sourceID in it. 
+ 	\item \texttt{isAnnotatedWith(Object object, Object sourceID)} - 
+ 	The translator needs to know whether this output object is annotated with the given source ID.
+ 	Return true if it is, false otherwise.
+ 	\item \texttt{setPriority(int pri, Object value)} -
+ 	This allows you to record the given integer priority for the given object so that it can be used in \texttt{getPos} below. 
+ 	\item \texttt{getPos(List<?> list, Object object)} -
+ 	The translator needs to know where in the given list to put the given object.
+ 	Return the index position in the given list.
+ 	
+\end{itemize}
 
 \subsection{Generation Descriptors}
 \label{sec:descriptors}
 
 Each rule should return a collection of one or more Generation Descriptors. Generation Descriptors have the following fields which are explained in this section.
 
-* EventBElement parent;
-* EStructuralFeature feature;
-* Object value;
-* Integer priority;
-* Boolean editable;
-* Boolean remove;
+\begin{itemize}
+	\item EventBElement parent;
+	\item EStructuralFeature feature;
+	\item Object value;
+	\item Integer priority;
+	\item Boolean editable;
+	\item Boolean remove;
+\end{itemize}
 
 The feature of the parent will be changed in the following ways:
 
-If remove is false:
-* 1) If the feature is a containment and the value is an element of the correct kind, the value will be added to the containment in a position according to the priority
-* 2) If the feature is a reference and the value is an element of the correct kind, the value will be added to the reference in a position according to the priority
-* 3) If the feature is an EAttribute and the value is of the correct type, the feature will be set to the value
+\paragraph{If remove is false:}
+\begin{itemize}
+	\item  If the feature is a containment and the value is an element of the correct kind, the value will be added to the containment in a position according to the priority
+	\item  If the feature is a reference and the value is an element of the correct kind, the value will be added to the reference in a position according to the priority
+	\item  If the feature is an EAttribute and the value is of the correct type, the feature will be set to the value
+\end{itemize}
 
-Priority can be used to control the relative position of the generated elements  
-* 1 - must come first
-* 10 - not important
-* ---user entered items---
-* 0 must come after user entered items
-* -10 must come last
+\textbf{Priority} can be used to control the relative position of the generated elements as follows
+\begin{itemize}
+	\item 1 - must come first
+	\item 10 - not important
+	\item ---user entered items---
+	\item 0 must come after user entered items
+	\item -10 must come last
+\end{itemize}
 
-Editable - this affects read-only status of the generated element and whether or not it will be preserved or re-generated in a subsequent generation.
-* false - the element is set as read-only (the user cannot change its attributes nor add/remove children), any existing copy of the element will be deleted and re-generated at each re-generation
-* true  - the element is not read-only and will not be deleted before re-generation. (N.B. It is the responsibility of the client rules to check whether this element already exists and only only generate a new one if it does not)
+\textbf{Editable} - this affects read-only status of the generated element and whether or not it will be preserved or re-generated in a subsequent generation.
+\begin{itemize}
+	\item  false - the element is set as read-only (the user cannot change its attributes nor add/remove children), any existing copy of the element will be deleted and re-generated at each re-generation
+	\item  true  - the element is not read-only and will not be deleted before re-generation. (N.B. It is the responsibility of the client rules to check whether this element already exists and only generate a new one if it does not).
+\end{itemize}
 
-If remove is true:
-* 1) If the feature is a containment and the value is an element of the correct kind, the value will be deleted from the containment
-* 2) If the feature is a reference and the value is an element of the correct kind, the value will be removed from the reference
-* 3) If the feature is an EAttribute, the feature will be unset 
+\paragraph{If remove is true:}
+\begin{itemize}
+	\item If the feature is a containment and the value is an element of the correct kind, the value will be deleted from the containment
+	\item If the feature is a reference and the value is an element of the correct kind, the value will be removed from the reference
+	\item If the feature is an EAttribute, the feature will be unset 
+\end{itemize}
 
 \subsection{Rules}
 \label{sec:rules}

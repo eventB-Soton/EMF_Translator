@@ -41,9 +41,11 @@
 
 <div><h2 id="sec:release-notes">2.7 Release Notes</h2>
 <ul class="itemize">
-<li><p><b class="bfseries">2.1.1</b> - add release history for 2.1.0 to build </p></li><li><p><b class="bfseries">2.1.0</b> - Translator - 2.1.0 </p><ul class="itemize">
+<li><p><b class="bfseries">3.0.1</b> Bug fix: Avoid infinite recursion when getting previously translated elements </p></li><li><p><b class="bfseries">3.0.0</b> - </p><ul class="itemize">
+<li><p>move ’getAffectedResources’ to adapter so it can be specialised by clients </p></li><li><p>move saving of resources to handler level so that it can be specialised by clients </p></li><li><p>support automatic creation of resources when specified by translation rules </p></li><li><p>Provide an un-translate facility </p></li><li><p>Improve status and exception handling </p></li><li><p>Add support for running validation prior to translation </p></li><li><p>Support several translations for same command id </p></li><li><p>Support translation into same file as source </p></li><li><p>Handler no longer converts Rodin elements to Event-B EMF. A new method getEObject can be overridden by clients to do this (this removes dependencies on Rodin and Event-B EMF plugins) </p></li><li><p>feature renamed from ac.soton.emf.utilities (version numbering inherited) </p></li><li><p>log exceptions thrown by translator command </p></li>
+</ul></li><li><p><b class="bfseries">2.1.1</b> - add release history for 2.1.0 to build </p></li><li><p><b class="bfseries">2.1.0</b> - </p><ul class="itemize">
 <li><p>programmatic invocation </p></li><li><p>pre and post processing </p></li><li><p>adaptor support for defining position in containment </p></li>
-</ul></li><li><p><b class="bfseries">2.0.0</b> - Translator - 2.0.0 - more extensible translator extension (ruleset extension) </p></li><li><p><b class="bfseries">1.1.0</b> - Translator - 1.1.0 - make handler more flexible to generalise usage </p></li><li><p><b class="bfseries">1.0.0</b> - Translator - 1.0.0 - fix dialogue problem </p></li>
+</ul></li><li><p><b class="bfseries">2.0.0</b> - more extensible translator extension (ruleset extension) </p></li><li><p><b class="bfseries">1.1.0</b> - make handler more flexible to generalise usage </p></li><li><p><b class="bfseries">1.0.0</b> - fix dialogue problem </p></li>
 </ul><h3 id="sec:known-issues">Known Issues</h3>
 <ul class="itemize">
 <li><p>None at the moment! </p></li>

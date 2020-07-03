@@ -40,7 +40,9 @@
 
 
 <div><h2 id="sec:priorities">3.4 Priorities</h2>
-<p>Priority may be from 10 to -10, where 1 indicates first in the containment and -10 last in the containment. Elements in the containment that are not (currently) being generated are placed between priorities 10 and 0. Bear in mind that the relative position of different diagrams (extensions)is preserved within each priority band. Also the order of source elements within their containment is preserved within each priority band. </p><p>1 2 3 4 5 6 7 8 9 10 &lt;other content&gt; 0 -1 -2 -3 -4 -5 -6 -7 -8 -9 -10 </p><p>For example, a basic type invariant that doesn’t depend on other variables might be placed at position 1 whereas a theorem or invariant included purely for proof purposes might be placed at position -10. </p><p>A current limitation of the priority scheme is that there are a limited number of priorities. For example, this could be a problem if a rule needs to calculate positions of each element within a collection based on dependencies of the element instance. </p></div>
+<p>Priority may be from 10 to -10, where 1 indicates first in the containment and -10 last in the containment. Elements in the containment that are not (currently) being generated are placed between priorities 10 and 0. Bear in mind that the relative position of different diagrams (extensions) is preserved within each priority band. Also the order of source elements within their containment is preserved within each priority band. </p><pre>
+1 2 3 4 5 6 7 8 9 10 &lt;other content&gt; 0 -1 -2 -3 -4 -5 -6 -7 -8 -9 -10
+</pre><p>For example, a basic type invariant that doesnt depend on other variables might be placed at position 1 whereas a theorem or invariant included purely for proof purposes might be placed at position -10. </p><p>A current limitation of the priority scheme is that there are a limited number of priorities. For example, this could be a problem if a rule needs to calculate positions of each element within a collection based on dependencies of the element instance. </p></div>
 
 
 

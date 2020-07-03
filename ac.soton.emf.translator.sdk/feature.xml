@@ -2,7 +2,7 @@
 <feature
       id="ac.soton.emf.translator.sdk"
       label="%featureName"
-      version="3.0.1.qualifier"
+      version="3.0.1.release"
       provider-name="%featureVendor"
       license-feature="org.rodinp.licence"
       license-feature-version="1.0.0.release">
@@ -23,11 +23,21 @@
          id="ac.soton.emf.translator.feature"
          version="0.0.0"/>
 
+   <requires>
+      <import plugin="org.eclipse.help"/>
+   </requires>
+
    <plugin
          id="ac.soton.emf.translator.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
+
+   <plugin
+         id="ac.soton.emf.translator.doc"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
 </feature>
