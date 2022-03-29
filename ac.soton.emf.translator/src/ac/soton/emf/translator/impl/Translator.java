@@ -29,6 +29,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EContentsEList;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -443,9 +444,29 @@ public class Translator {
 			}
 		}
 
-		for (final EObject child : sourceElement.eContents()) {
-				traverseModel(child);
+
+		EList<EReference> containments = sourceElement.eClass().getEAllContainments();		
+		for (EReference containment : containments) {
+			if (!containment.isDerived()) {
+				Object containmentValue = sourceElement.eGet(containment);
+				if (containmentValue instanceof EList<?>) {
+					for (Object child : (EList<?>)containmentValue) {
+						if (child instanceof EObject) {
+							traverseModel((EObject) child);
+						}
+					}
+				}
+			}
 		}
+
+		// original code was simpler...  
+		// however, we now have use cases involving derived containments 
+		// the eContents() method returns multiple copies of children that
+		// are also in derived containments 
+		
+//		for (final EObject child : sourceElement.eContents()) {
+//				traverseModel(child);
+//		}
 	}	
 
 }
