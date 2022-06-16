@@ -29,7 +29,6 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.util.EContentsEList;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -304,9 +303,18 @@ public class Translator {
 										translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
 									}
 									
-									int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
+									int pos=-1;
+									//if a 'before' object has been given and it is in the feature, the position is before that object 
+									if (translationDescriptor.before != null) {
+										pos = ((EList)featureValue).indexOf(translationDescriptor.before);
+									}
+									
+									//otherwise let the adapter decide (possibly using the annotated priority)
+									if (pos==-1) {
+										pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
+									}
 									((EList)featureValue).add(pos, translationDescriptor.value);
-											
+									
 								}
 								else{
 									ArrayList<Object> toRemove = new ArrayList<Object>();
