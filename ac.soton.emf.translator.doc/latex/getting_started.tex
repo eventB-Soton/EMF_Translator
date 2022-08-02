@@ -102,18 +102,34 @@ We first declare the translator and link it to the command that you defined in s
 		\item \textbf{name:} this is just a readable name used for your rule in the extensions (not very important but helps you maintain these extensions).
 		\item \textbf{source\_package:} if the source\_class is in the source\_package defined for the translator in section \ref{sec:translatorDecln}, you can leave this field blank. However, sometimes a model may contain children from a different meta-model. In this case you need to specify the nsURI of the ecore meta-model that contains the source\_class.
 	\end{itemize}
-	Now that you have specified a rule for a class of source elements you can start writing some java code to implement the rule. See section \ref{sec:rulesWriting} for details on how to do this. However we recommend that you just add some stub methods first and breakpoint them to check that your declarations in sections \ref{sec:ui}, \ref{sec:translatorDecln} and \ref{sec:rulesDecln} worked and your translator is recognised and called correctly by EMF2EMF. Once you have checked this and discovered how to write rules, you will need to return her to this extension to add more rules for different kinds of source elements that you want to translate (i.e. children of the first source\_class that you translated). The translator will work irrespective of the order of the rule extensions, but it is more efficient if you can declare them in the order of dependencies. I.e. if rule B needs rule A to have fired before it can work, then declare the extension for rule A before rule B. These dependecies are discussed more in section \ref{sec:rulesWriting}. 
+	Now that you have specified a rule for a class of source elements you can start writing some java code to implement the rule. See section \ref{sec:rules} for details on how to do this. However we recommend that you just add some stub methods first and breakpoint them to check that your declarations in sections \ref{sec:ui}, \ref{sec:translatorDecln} and \ref{sec:rulesDecln} worked and your translator is recognised and called correctly by EMF2EMF. Once you have checked this and discovered how to write rules, you will need to return her to this extension to add more rules for different kinds of source elements that you want to translate (i.e. children of the first source\_class that you translated). The translator will work irrespective of the order of the rule extensions, but it is more efficient if you can declare them in the order of dependencies. I.e. if rule B needs rule A to have fired before it can work, then declare the extension for rule A before rule B. These dependecies are discussed more in section \ref{sec:rules}. 
 %\end{enumerate}
 
 \subsection{Configuring your translator}
 \label{sec:configure}
 
-\texttt{<TO BE WRITTEN>}
+Apart from writing the actual rules, there are a number of issues that can vary depending on the context and nature of your translation.
+To accommodate these variations, an adapter interface is defined by the translator framework so that you can provide an implementation of the interface to tell the translator how to handle your these issues in your case.
+Your adapter must implement IAdapter and must be declared in your extension declaration (see Section~\ref{sec:translatorDecln}).
+The adapter features are described in more detail in Section~\ref{sec:adapter}.
 
-\subsection{Writing Rules}
-\label{sec:rulesWriting}
-
-\texttt{<TO BE WRITTEN>}
+A default adapter is provided which you can extend if you only need to define a few variations.
+Or, if the default behaviour is sufficient for your translator, you could just use the default adapter directly (i.e. reference its class in your extension declaration).
+The default adapter implementation is as follows:
+\begin{itemize}
+\item \textbf{initialiseAdapter} - do nothing.
+\item \textbf{isRoot} - return true iff the feature of the given Translation Descriptor is null.
+\item \textbf{getComponentURI} - return null.
+\item \textbf{getaffectedResources} -  return all EMF resources in the same project as the given source element.
+\item \textbf{inputFilter} -  return true (i.e. nothing is filtered)
+\item \textbf{outputFilter} -  return true (i.e. nothing is filtered)
+\item \textbf{match} -  return true if both of the given elements are null, or the elements are equal according to the `equals' method of the first element.
+\item \textbf{getSourceId} - return null.
+\item \textbf{annotateTarget} - do nothing.
+\item \textbf{isannotated} - return false.
+\item \textbf{setPriority} - do nothing.
+\item \textbf{gotPos} - return the index corresponding to the end of the given list (i.e. size of list).
+\end{itemize}
 
 \subsection{Release Notes}
 \label{sec:release-notes}
