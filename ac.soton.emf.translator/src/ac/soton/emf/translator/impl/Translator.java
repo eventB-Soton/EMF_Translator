@@ -1,12 +1,15 @@
 /*******************************************************************************
- *  Copyright (c) 2015 University of Southampton.
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
- *   
- *  Contributors:
- *  University of Southampton - Initial implementation
+ * Copyright (c) 2014, 2022 University of Southampton.
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
+ * which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *    University of Southampton - initial API and implementation
  *******************************************************************************/
 package ac.soton.emf.translator.impl;
 
@@ -300,9 +303,18 @@ public class Translator {
 										translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
 									}
 									
-									int pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
+									int pos=-1;
+									//if a 'before' object has been given and it is in the feature, the position is before that object 
+									if (translationDescriptor.before != null) {
+										pos = ((EList)featureValue).indexOf(translationDescriptor.before);
+									}
+									
+									//otherwise let the adapter decide (possibly using the annotated priority)
+									if (pos==-1) {
+										pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
+									}
 									((EList)featureValue).add(pos, translationDescriptor.value);
-											
+									
 								}
 								else{
 									ArrayList<Object> toRemove = new ArrayList<Object>();
@@ -440,9 +452,29 @@ public class Translator {
 			}
 		}
 
-		for (final EObject child : sourceElement.eContents()) {
-				traverseModel(child);
+
+		EList<EReference> containments = sourceElement.eClass().getEAllContainments();		
+		for (EReference containment : containments) {
+			if (!containment.isDerived()) {
+				Object containmentValue = sourceElement.eGet(containment);
+				if (containmentValue instanceof EList<?>) {
+					for (Object child : (EList<?>)containmentValue) {
+						if (child instanceof EObject) {
+							traverseModel((EObject) child);
+						}
+					}
+				}
+			}
 		}
+
+		// original code was simpler...  
+		// however, we now have use cases involving derived containments 
+		// the eContents() method returns multiple copies of children that
+		// are also in derived containments 
+		
+//		for (final EObject child : sourceElement.eContents()) {
+//				traverseModel(child);
+//		}
 	}	
 
 }

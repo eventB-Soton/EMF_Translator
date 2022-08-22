@@ -23,7 +23,7 @@ To define a particular generator a client should:
 	\item Define extensions of the eclipse UI extension points to provide a command handler as defined in section \ref{sec:ui}
 	\item Define extensions of the translator and ruleset extension points as defined in sections \ref{sec:translatorDecln} and \ref{sec:rulesDecln} 
 	\item Extend the translators adapter class to specialise behaviour to a particular use case as described in section \ref{sec:configure}.
-	\item Implement rule classes as described in section \ref{sec:rulesWriting}
+	\item Implement rule classes as described in section \ref{sec:rules}
 \end{enumerate}
 
 \subsection{Adapter}
@@ -75,17 +75,18 @@ The adapter has the following methods:
  	
 \end{itemize}
 
-\subsection{Generation Descriptors}
+\subsection{Translation Descriptors}
 \label{sec:descriptors}
 
-Each rule should return a collection of one or more Generation Descriptors. Generation Descriptors have the following fields which are explained in this section.
+Each rule should return a collection of one or more Translation Descriptors. Translation Descriptors have the following fields which are explained in this section.
 
 \begin{itemize}
-	\item EventBElement parent;
+	\item EObject parent;
 	\item EStructuralFeature feature;
 	\item Object value;
+	\item Object before;
 	\item Integer priority;
-	\item Boolean editable;
+%	\item Boolean editable;
 	\item Boolean remove;
 \end{itemize}
 
@@ -98,6 +99,9 @@ The feature of the parent will be changed in the following ways:
 	\item  If the feature is an EAttribute and the value is of the correct type, the feature will be set to the value
 \end{itemize}
 
+\textbf{Before} can be used to control the position of the generated elements. 
+The generated element will be positioned just before the given object if it exists in the feature.
+
 \textbf{Priority} can be used to control the relative position of the generated elements as follows
 \begin{itemize}
 	\item 1 - must come first
@@ -107,11 +111,11 @@ The feature of the parent will be changed in the following ways:
 	\item -10 must come last
 \end{itemize}
 
-\textbf{Editable} - this affects read-only status of the generated element and whether or not it will be preserved or re-generated in a subsequent generation.
-\begin{itemize}
-	\item  false - the element is set as read-only (the user cannot change its attributes nor add/remove children), any existing copy of the element will be deleted and re-generated at each re-generation
-	\item  true  - the element is not read-only and will not be deleted before re-generation. (N.B. It is the responsibility of the client rules to check whether this element already exists and only generate a new one if it does not).
-\end{itemize}
+%\textbf{Editable} - this affects read-only status of the generated element and whether or not it will be preserved or re-generated in a subsequent generation.
+%\begin{itemize}
+%	\item  false - the element is set as read-only (the user cannot change its attributes nor add/remove children), any existing copy of the element will be deleted and re-generated at each re-generation
+%	\item  true  - the element is not read-only and will not be deleted before re-generation. (N.B. It is the responsibility of the client rules to check whether this element already exists and only generate a new one if it does not).
+%\end{itemize}
 
 \paragraph{If remove is true:}
 \begin{itemize}
@@ -129,7 +133,7 @@ Rule classes must implement IRule. It is recommended the rule classes extend
  \end{verbatim}
  which provides some concise constants for the commonly needed containments and defines some default behaviour (always enabled and dependencies ok).  Note that the rule will only be attempted for the type of source element defined in the extension point. However, this could be defined as an abstract base class to allow the rule to operate on several types of element.
 
-Where a tree structure is entirely generated within one rule firing (e.g. an event with guards and actions) it is more efficient to construct the entire event and return a single Generation Descriptor that adds that event. It is also possible to do this by returning separate Generation Descriptors to add the event and each guard and action individually. Using a single descriptor is more efficient but means that some features of the translator framework are bypassed. For example, the priority scheme cannot be used, your code will determine the order. 
+Where a tree structure is entirely generated within one rule firing (e.g. an event with guards and actions) it is more efficient to construct the entire event and return a single Translation Descriptor that adds that event. It is also possible to do this by returning separate Translation Descriptors to add the event and each guard and action individually. Using a single descriptor is more efficient but means that some features of the translator framework are bypassed. For example, the priority scheme cannot be used, your code will determine the order. 
 
 A typical line from a rule class might look like this:
  \begin{verbatim}
@@ -142,18 +146,18 @@ where,  ret is the list to be returned and machine is the parent element contain
 A rule has 4 methods:
 \begin{itemize}
 \item \texttt{boolean enabled (final EventBElement sourceElement)}
-\item \texttt{boolean dependenciesOK(EventBElement sourceElement, \\  List<GenerationDescriptor> generatedElements)}
+\item \texttt{boolean dependenciesOK(EventBElement sourceElement, \\  List<TranslationDescriptor> generatedElements)}
 \item \texttt{boolean fireLate()}
-\item \texttt{List<GenerationDescriptor> fire(EventBElement sourceElement, \\   List<GenerationDescriptor> generatedElements)}
+\item \texttt{List<TranslationDescriptor> fire(EventBElement sourceElement, \\   List<TranslationDescriptor> generatedElements)}
 \end{itemize}
 
 The \textbf{enabled} method can be used to restrict when it applies. More than one rule can be defined for the same kind of element allowing the generation to be decomposed in a maintainable way. 
 
-The \textbf{DependenciesOK} method allows the method to be deferred since the success of rules may depend on what has already been generated. The dependenciesOK method is passed the list of GenerationDescriptors created so far.
+The \textbf{DependenciesOK} method allows the method to be deferred since the success of rules may depend on what has already been generated. The dependenciesOK method is passed the list of TranslationDescriptors created so far.
 
 The \textbf{fireLate} method forces the rule to be fired when all other rules have been fired. This is usually used when the rules behaviour depends on what other rules have done.
 
-The \textbf{fire} method must return a list of GenerationDescriptors describing what should be generated. The Utility class, Make, provides a convenience method to help construct a GenerationDescriptor from the parent element, the containment feature, the new child and the priority indicator and if needed the editable setting.
+The \textbf{fire} method must return a list of TranslationDescriptors describing what should be generated. The Utility class, Make, provides a convenience method to help construct a TranslationDescriptor from the parent element, the containment feature, the new child and the priority indicator and if needed the editable setting.
 
 \subsection{Priorities}
 \label{sec:priorities}
@@ -168,9 +172,16 @@ For example, a basic type invariant that doesnt depend on other variables might 
 
 A current limitation of the priority scheme is that there are a limited number of priorities. For example, this could be a problem if a rule needs to calculate positions of each element within a collection based on dependencies of the element instance.
 
-\subsection{Editable}
-\label{sec:editable}
-In most cases the generated element should be set as non-editable (the default). In this case the element will be deleted and re-generated on each invocation of the generator. The user should not change any attributes of the element nor add to its children. In some case, however, it is necessary to generate an element whose contents may be modified by the user. To do this set the editable parameter of the Generation Descriptor. In this case the generated element will not be deleted when the generator is next invoked. The rule must take care not to return another Generation Descriptor if the element has already been generated. It should look for a suitable generated element (to use for adding further generated chldren etc.) and only generate a new one if it doesn't exist.
+\subsection{Remove}
+\label{sec:remove}
+In most cases the translation descriptor remove parameter should be set to `true'. 
+In this case the element will be deleted and re-generated on each invocation of the translator. 
+The user should not change any attributes of the element nor add to its children (since any changes will be overwritten the next time the element is removed and re-generated by he translator). 
+In some case, however, it is necessary to generate an element whose contents may be modified by the user. 
+To do this set the remover parameter of the Translation Descriptor to `false'. 
+In this case the generated element will not be deleted when the generator is next invoked. 
+The rule must take care not to return another Tanslation Descriptor if the element has already been generated.
+It should look for a suitable generated element (to use for adding further generated chldren etc.) and only generate a new one if it doesn't exist.
 
 %
 %\subsection{Example Figure}
