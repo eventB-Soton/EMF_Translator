@@ -63,39 +63,25 @@ public class TranslationDescriptor{
 	
 	public Integer priority;
 	public Boolean remove;
-
-
-	
-	public TranslationDescriptor(EObject parent, EStructuralFeature feature, Object value){
-		this.parent = parent; 
-		this.feature = feature; 
-		this.value = value; 
-		this.before = null;
-		this.priority = 0; 
-		this.remove = false;
-	}
-
-	public TranslationDescriptor(EObject parent, EStructuralFeature feature, Object value, Integer priority, Boolean remove){
-		this(parent, feature, value, priority);
-		this.remove = remove;  
-	}
-	
-	public TranslationDescriptor(EObject parent, EStructuralFeature feature, Object value, Integer priority){
-		this(parent, feature, value);
-		this.priority = priority; 
-	}
-	
 	/**
 	 * @since 4.0
 	 */
-	public TranslationDescriptor(EObject parent, EStructuralFeature feature, Object value, Object before, Integer priority) {
-		this(parent, feature, value, priority);
+	public EObject source;
+
+
+	/**
+	 * This is the basic constructor that sets all fields
+	 * @since 4.0
+	 */
+	public TranslationDescriptor(EObject parent, EStructuralFeature feature, Object value, Object before, Integer priority, Boolean remove, EObject source){
+		this.parent = parent; 
+		this.feature = feature; 
+		this.value = value; 
 		this.before = before;
+		this.priority = priority; 
+		this.remove = remove;
+		this.source = source;
 	}
 	
-	public TranslationDescriptor(EObject parent, EStructuralFeature feature, Object value, Boolean remove){
-		this(parent, feature, value);
-		this.remove = remove;
-	}
 
 }
