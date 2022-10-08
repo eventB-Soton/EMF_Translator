@@ -308,16 +308,8 @@ public class Translator {
 										translatorConfig.adapter.setPriority(translationDescriptor.value, pri);
 									}
 									
-									int pos=-1;
-									//if a 'before' object has been given and it is in the feature, the position is before that object 
-									if (translationDescriptor.before != null) {
-										pos = ((EList)featureValue).indexOf(translationDescriptor.before);
-									}
+									int pos = getPos(translationDescriptor, (EList)featureValue);
 									
-									//otherwise let the adapter decide (possibly using the annotated priority)
-									if (pos==-1) {
-										pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
-									}
 									((EList)featureValue).add(pos, translationDescriptor.value);
 									
 								}
@@ -353,6 +345,42 @@ public class Translator {
 			}
 		}
 		return modifiedResources;
+	}
+
+	/**
+	 * Finds the position to put the new value which is in the translation descriptor in the given EList.
+	 * If a before object is given in the descriptor, the position should be before that (it may be a child of an element in the list).
+	 * Otherwise, the position is calculated by the adapter.
+	 * 
+	 * @param descriptor
+	 * @param elistFeatureValue
+	 * @return
+	 */
+	private int getPos(TranslationDescriptor descriptor, EList<Object> elistFeatureValue) {
+		//if a 'before' object has been given and it or one of its ancestors is in the feature, the position is before that object 
+		int pos=getPosOf(elistFeatureValue,descriptor.before);
+		
+		//otherwise let the adapter decide (possibly using the annotated priority)
+		if (pos==-1) {
+			pos = translatorConfig.adapter.getPos(elistFeatureValue, descriptor.value);
+		}		
+		return pos;
+	}
+
+	/** 
+	 * 
+	 * returns the position of the object in the list if it is in the list,
+	 * Or recursively, the position of its parent if it is not
+	 * or -1 if it is not an eObject or none of its ancestors are in the list
+	 * 
+	 * @param list
+	 * @param eObject
+	 * @return
+	 */
+	private int getPosOf(List<Object> list, Object object) {
+		if (!(object instanceof EObject)) return -1;
+		if (list.contains(object)) return list.indexOf(object);
+		return getPosOf(list, ((EObject)object).eContainer());
 	}
 
 
