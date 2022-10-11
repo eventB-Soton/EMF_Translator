@@ -17,6 +17,11 @@ package ac.soton.emf.translator.configuration;
 import org.eclipse.osgi.util.NLS;
 
 /**
+ * Attribute identifiers used by the translator.
+ * Note that the values of these attribute identifiers must be declared to Rodin as they are keys to the types persisted in Rodin
+ * @see /ac.soton.emf.translator/plugin.xml
+ * @see /ac.soton.emf.translator/src/ac/soton/emf/translator/configuration/attributeIdentifiers.properties
+ * 
  * @since 4.0
  */
 public class AttributeIdentifiers extends NLS {
