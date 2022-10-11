@@ -19,4 +19,38 @@
    <extension-point id="ac.soton.emf.translators" name="translators" schema="schema/ac.soton.emf.translators.exsd"/>
    <extension-point id="ac.soton.emf.translator.rulesets" name="translator rulesets" schema="schema/ac.soton.emf.translator.rulesets.exsd"/>
      
+     
+   <extension
+         point="org.rodinp.core.attributeTypes">
+      <attributeType
+            id="Translation_ID"
+            kind="string"
+            name="Translation ID">
+      </attributeType>
+      <attributeType
+            id="Source_Element"
+            kind="string"
+            name="Source Element">
+      </attributeType>
+      <attributeType
+            id="Placement_Priority"
+            kind="integer"
+            name="Placement Priority">
+      </attributeType>
+    </extension>
+    <extension
+         point="org.rodinp.core.itemRelations">
+      <ubiquitous>
+         <attributeType
+               typeId="ac.soton.emf.translator.Translation_ID">
+         </attributeType>
+         <attributeType
+               typeId="ac.soton.emf.translator.Source_Element">
+         </attributeType>
+         <attributeType
+               typeId="ac.soton.emf.translator.Placement_Priority">
+         </attributeType>
+      </ubiquitous>
+    </extension>
+    
 </plugin>
