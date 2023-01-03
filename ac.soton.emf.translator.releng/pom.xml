@@ -11,8 +11,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Plug-in versions -->
-    <tycho-version>2.0.0</tycho-version>
-    <maven-resources-plugin-version>3.0.2</maven-resources-plugin-version>
+    <tycho-version>2.7.5</tycho-version>
+    <maven-resources-plugin-version>3.3.0</maven-resources-plugin-version>
     <!-- URL for Eclipse Updates repository -->
     <eclipse_updates-repo.url>http://download.eclipse.org/eclipse/updates/4.22/</eclipse_updates-repo.url>
     <!-- URL for Eclipse Releases repository (2020-06) -->
