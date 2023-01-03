@@ -66,17 +66,31 @@ public class TranslatorFactory {
 	 * The constructor for the shared instance of factory,
 	 * populates the registry of translator configurations from extensions point
 	 */
-	private TranslatorFactory() throws CoreException {
+	private TranslatorFactory() {
 
 		// populate translator configuration data from registered extensions
 		for (final IExtension translatorExtension : Platform.getExtensionRegistry().getExtensionPoint(Identifiers.EXTPT_TRANSLATORS_EXTPTID).getExtensions()) {
 			for (final IConfigurationElement translatorExtensionElement : translatorExtension.getConfigurationElements()) {
-				EPackage rootSourcePackage = EPackage.Registry.INSTANCE.getEPackage(translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_SOURCEPACKAGE));
-				EClassifier rootSourceClass = rootSourcePackage.getEClassifier(translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ROOTSOURCECLASS));
 				String translatorID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_TRANSLATORID);
+				EPackage rootSourcePackage = EPackage.Registry.INSTANCE.getEPackage(translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_SOURCEPACKAGE));
+				if (rootSourcePackage==null) {
+					String errorMessage = "Translator extension pt does not have a valid source package :  ignoring "+ translatorID;
+					Activator.logError(errorMessage);
+					continue;
+				}
+				EClassifier rootSourceClass = rootSourcePackage.getEClassifier(translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ROOTSOURCECLASS));
+
 				String commandID = translatorExtensionElement.getAttribute(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_COMMANDID);
 				if (getTranslatorConfig(commandID, rootSourceClass)==null){
-					final IAdapter adapter = (IAdapter) translatorExtensionElement.createExecutableExtension(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ADAPTERCLASS);
+					IAdapter adapter;
+					try {
+						adapter = (IAdapter) translatorExtensionElement.createExecutableExtension(Identifiers.EXTPT_TRANSLATORS_TRANSLATOR_ADAPTERCLASS);
+					} catch (CoreException e) {
+						String errorMessage = "Could not create translation adapter :  ignoring "+ translatorID;
+						Activator.logError(errorMessage, e);
+						e.printStackTrace();
+						continue;
+					}
 					if (rootSourcePackage!= null) {
 						TranslatorConfig translatorConfig = new TranslatorConfig(translatorID, rootSourcePackage, rootSourceClass, adapter);
 						
@@ -104,7 +118,15 @@ public class TranslatorFactory {
 									
 										// if we found the class, add the rule
 										if (sourceClass != null) {
-											final IRule rule = (IRule) ruleExtensionElement.createExecutableExtension(Identifiers.EXTPT_RULESETS_RULESET_RULE_RULECLASS);									
+											IRule rule;
+											try {
+												rule = (IRule) ruleExtensionElement.createExecutableExtension(Identifiers.EXTPT_RULESETS_RULESET_RULE_RULECLASS);
+											} catch (CoreException e) {
+												String errorMessage = "Could not create translation rule for "+ruleExtensionElement.getAttribute(Identifiers.EXTPT_RULESETS_RULESET_RULE_NAME)+" :  ignoring "+ translatorID;
+												Activator.logError(errorMessage, e);
+												e.printStackTrace();
+												continue;
+											}									
 											translatorConfig.addRule(sourceClass, rule);
 										}
 									}
@@ -133,7 +155,7 @@ public class TranslatorFactory {
 	 * @return
 	 * @throws CoreException
 	 */
-	public static TranslatorFactory getFactory() throws CoreException{
+	public static TranslatorFactory getFactory(){
 		if (factory == null){
 			factory = new TranslatorFactory();
 		}

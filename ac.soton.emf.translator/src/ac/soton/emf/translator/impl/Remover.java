@@ -37,7 +37,7 @@ import ac.soton.emf.translator.utils.Find;
 public class Remover {
 
 	private final Collection<Resource> resources;
-	private final Object sourceID;
+	private final String translationID;
 	private final IAdapter adapter;
 	
 	private List<Resource> modifiedResources;
@@ -49,14 +49,14 @@ public class Remover {
 	 */
 	private Set<EObject> searchedEObjects;
 	
-	public Remover(final Collection<Resource> affectedResources, Object sourceID, IAdapter adapter) {
+	public Remover(final Collection<Resource> affectedResources, String translationID, IAdapter adapter) {
 		this.resources = affectedResources;
-		this.sourceID = sourceID;
+		this.translationID = translationID;
 		this.adapter = adapter;
 	}
 	
 	public boolean canExecute(){
-		return resources!=null && sourceID!=null ;
+		return resources!=null && translationID!=null ;
 	}	
 	
 	public List<Resource> removeTranslated(){
@@ -120,7 +120,7 @@ public class Remover {
 
 			//if this element is annotated with the sourceID
 			// remove it
-			if (adapter.isAnnotatedWith(eObject,sourceID)){
+			if (adapter.wasGeneratedBy(eObject,translationID)){
 				remove.add(eObject);
 				if(!modifiedResources.contains(root.eResource())){
 					modifiedResources.add(root.eResource());

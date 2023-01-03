@@ -29,6 +29,7 @@ public class Identifiers extends NLS {
 	public static String EXTPT_RULESETS_EXTPTID;
 	public static String EXTPT_RULESETS_RULESET_TRANSLATORID;
 	public static String EXTPT_RULESETS_RULESET_RULE;
+	public static String EXTPT_RULESETS_RULESET_RULE_NAME;
 	public static String EXTPT_RULESETS_RULESET_RULE_RULECLASS;
 	public static String EXTPT_RULESETS_RULESET_RULE_SOURCECLASS;
 	public static String EXTPT_RULESETS_RULESET_RULE_SOURCEPACKAGE;

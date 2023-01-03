@@ -51,7 +51,7 @@ public class Translator {
 	
 	//	configuration data for this instance of a translator
 	private TranslatorConfig translatorConfig;
-	private Object sourceID;
+	private String translationID;
 
 	
 	// VARIABLE DATA
@@ -102,12 +102,12 @@ public class Translator {
 			translatorConfig.adapter.initialiseAdapter(sourceElement);
 			
 			//Obtain an ID from the source element
-			sourceID = translatorConfig.adapter.getSourceId(sourceElement);
+			translationID = translatorConfig.adapter.getTranslationId(translatorConfig.translatorID, sourceElement);
 
 			Collection<Resource> affectedResources = translatorConfig.adapter.getAffectedResources(editingDomain, sourceElement);
 			
 			//remove previously generated elements
-			Remover remover = new Remover(affectedResources, sourceID, translatorConfig.adapter);
+			Remover remover = new Remover(affectedResources, translationID, translatorConfig.adapter);
 			modifiedResources.addAll(remover.removeTranslated());
 			
 		} catch (Exception e) {
@@ -143,7 +143,7 @@ public class Translator {
 			translatorConfig.adapter.initialiseAdapter(sourceElement);
 			
 			//Obtain an ID from the source element
-			sourceID = translatorConfig.adapter.getSourceId(sourceElement);
+			translationID = translatorConfig.adapter.getTranslationId(translatorConfig.translatorID, sourceElement);
 			
 			//do the translation
 			doGenerate(sourceElement);
@@ -163,7 +163,7 @@ public class Translator {
 			Collection<Resource> affectedResources = translatorConfig.adapter.getAffectedResources(editingDomain, sourceElement);
 			
 			//remove previously generated elements
-			Remover remover = new Remover(affectedResources, sourceID, translatorConfig.adapter);
+			Remover remover = new Remover(affectedResources, translationID, translatorConfig.adapter);
 			modifiedResources.addAll(remover.removeTranslated());
 			
 			//add new roots to resources
@@ -237,8 +237,11 @@ public class Translator {
 			if (translatorConfig.adapter.isRoot(translationDescriptor)){
 				URI fileUri = translatorConfig.adapter.getComponentURI(translationDescriptor, sourceElement);
 				if (fileUri!=null){
-					translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
-					//translatorConfig.adapter.setPriority(0, translationDescriptor.value);
+					//annotate with translation details using the adapter (adapter may specialise this for the translation)
+					translatorConfig.adapter.setGeneratedBy(translationDescriptor.value, translationID);
+					//annotate with source element using the adapter
+					translatorConfig.adapter.setSourceElement(translationDescriptor.value, translationDescriptor.source);
+
 					Resource resource = editingDomain.getResourceSet().getResource(fileUri, false);
 					if (resource==null){
 						resource = editingDomain.createResource(fileUri.toString());
@@ -297,22 +300,16 @@ public class Translator {
 									
 									//the following alterations to the value should NOT be performed when the value is being added as a (non-containment) reference
 									if (!(translationDescriptor.feature instanceof EReference) || ((EReference)translationDescriptor.feature).isContainment()){
-										//annotations may be added to record the id of the source element from which this value was generated
-										translatorConfig.adapter.annotateTarget(sourceID, translationDescriptor.value);
+										//annotate with translation details using the adapter (adapter may specialise this for the translation)
+										translatorConfig.adapter.setGeneratedBy(translationDescriptor.value, translationID);
+										//annotate with source element using the adapter
+										translatorConfig.adapter.setSourceElement(translationDescriptor.value, translationDescriptor.source);
 										//also the priority may be set to influence the position within a containment
-										translatorConfig.adapter.setPriority(pri, translationDescriptor.value);
+										translatorConfig.adapter.setPriority(translationDescriptor.value, pri);
 									}
 									
-									int pos=-1;
-									//if a 'before' object has been given and it is in the feature, the position is before that object 
-									if (translationDescriptor.before != null) {
-										pos = ((EList)featureValue).indexOf(translationDescriptor.before);
-									}
+									int pos = getPos(translationDescriptor, (EList)featureValue);
 									
-									//otherwise let the adapter decide (possibly using the annotated priority)
-									if (pos==-1) {
-										pos = translatorConfig.adapter.getPos(((EList)featureValue), translationDescriptor.value);
-									}
 									((EList)featureValue).add(pos, translationDescriptor.value);
 									
 								}
@@ -348,6 +345,42 @@ public class Translator {
 			}
 		}
 		return modifiedResources;
+	}
+
+	/**
+	 * Finds the position to put the new value which is in the translation descriptor in the given EList.
+	 * If a before object is given in the descriptor, the position should be before that (it may be a child of an element in the list).
+	 * Otherwise, the position is calculated by the adapter.
+	 * 
+	 * @param descriptor
+	 * @param elistFeatureValue
+	 * @return
+	 */
+	private int getPos(TranslationDescriptor descriptor, EList<Object> elistFeatureValue) {
+		//if a 'before' object has been given and it or one of its ancestors is in the feature, the position is before that object 
+		int pos=getPosOf(elistFeatureValue,descriptor.before);
+		
+		//otherwise let the adapter decide (possibly using the annotated priority)
+		if (pos==-1) {
+			pos = translatorConfig.adapter.getPos(elistFeatureValue, descriptor.value);
+		}		
+		return pos;
+	}
+
+	/** 
+	 * 
+	 * returns the position of the object in the list if it is in the list,
+	 * Or recursively, the position of its parent if it is not
+	 * or -1 if it is not an eObject or none of its ancestors are in the list
+	 * 
+	 * @param list
+	 * @param eObject
+	 * @return
+	 */
+	private int getPosOf(List<Object> list, Object object) {
+		if (!(object instanceof EObject)) return -1;
+		if (list.contains(object)) return list.indexOf(object);
+		return getPosOf(list, ((EObject)object).eContainer());
 	}
 
 
@@ -429,7 +462,7 @@ public class Translator {
 	private void traverseModel(final EObject sourceElement) throws Exception {
 		
 		//this ensures that we do not translate from our own translated elements
-		if (!translatorConfig.adapter.inputFilter(sourceElement, sourceID))
+		if (!translatorConfig.adapter.inputFilter(sourceElement, translationID))
 			//translatorConfig.translatorID.equals(translatorConfig.adapter.getGeneratedById(sourceElement)))
 				return;
 		
@@ -452,7 +485,7 @@ public class Translator {
 			}
 		}
 
-
+		//recursively traverse contents but avoiding derived containments
 		EList<EReference> containments = sourceElement.eClass().getEAllContainments();		
 		for (EReference containment : containments) {
 			if (!containment.isDerived()) {
@@ -467,14 +500,6 @@ public class Translator {
 			}
 		}
 
-		// original code was simpler...  
-		// however, we now have use cases involving derived containments 
-		// the eContents() method returns multiple copies of children that
-		// are also in derived containments 
-		
-//		for (final EObject child : sourceElement.eContents()) {
-//				traverseModel(child);
-//		}
 	}	
 
 }
