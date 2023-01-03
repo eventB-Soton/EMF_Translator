@@ -6,9 +6,10 @@ This feature provides a framework for creating EMF model-to-model translators.
 Release history:
 ------------------------------------------------------------------------------
 ### 4.0.0 ###
-- Translator(4.0.0) - update compliance to Java 11 + other maintenance
-					- when traversing model ignore derived containments
-					- add 'before' to translator descriptor to allow more control over position of generated elements
+- Translator(4.0.0)
+  + update compliance to Java 11 + other maintenance
+  + when traversing model ignore derived containments
+  + add 'before' to translator descriptor to allow more control over position of generated elements
 ### 3.0.1 ###
 - Translator (3.0.1)
   + Bug fix: Avoid infinite recursion when getting previously translated elements
